@@ -5,7 +5,8 @@ Authors: Dominic Steinitz
 -/
 
 import Mathlib
-import PrincipalBundles.FakeFormIII
+import PrincipalBundles.Forms
+import PrincipalBundles.YangMills
 import PrincipalBundles.UnitsMFDeriv
 
 /-!
@@ -734,7 +735,7 @@ end FrameBundleRL
 
 section FrameBundleYangMills
 
-variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E] [FiniteDimensional ℝ E]
 
 /-- `maurerCartan` for `(E →L[ℝ] E)ˣ` is left-multiplication by `g⁻¹`. -/
 lemma maurerCartan_units_eq

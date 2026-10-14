@@ -2,15 +2,20 @@
 
 Principal bundles, connections and the exponential map of a Lie group in Lean 4, as a
 stand-alone Lake project on top of Mathlib. Moved out of the `smooth-exp-Lie-V` branch of
-`idontgetoutmuch/mathlib4` (tip `1132f60`).
+`idontgetoutmuch/mathlib4` (tip `1132f60`) and the `diff-forms-application` branch of
+`idontgetoutmuch/DeRhamCohomology` (`fc39c2d`), which split `FakeFormIII.lean` into
+`PrincipalBundle`, `FundamentalVectorField`, `ConnectionForm`, `Forms` and `YangMills`.
 
 ## Layout
 
 - `PrincipalBundles/` — the development:
   - `ExpLie.lean` — `expLie` and its smoothness (`contMDiff_expLie`).
-  - `FakeFormIII.lean` — `IsPrincipalBundle`, connection forms, `yangMills_transformation`.
-  - `FrameBundle.lean`, `UnitsMFDeriv.lean`, `FundamentalVF.lean`, `GradedDiffLieAlg.lean`,
-    `SmoothRightGAction.lean`.
+  - `SmoothRightGAction.lean` — smooth right actions (formerly `PrincipalGBundlePrelude`).
+  - `PrincipalBundle.lean` — `IsPrincipalBundle`, local sections, `contMDiffAt_gaugeMap`.
+  - `FundamentalVectorField.lean` — fundamental vector fields, `Ad`, `maurerCartan`.
+  - `ConnectionForm.lean`, `Forms.lean`, `YangMills.lean` — connection forms,
+    `yangMills_transformation`.
+  - `FrameBundle.lean`, `UnitsMFDeriv.lean`, `FundamentalVF.lean`, `GradedDiffLieAlg.lean`.
 - `TauCeti/` — files copied unchanged from Tau Ceti for the maximal flow of a vector field
   (Lee Thm 9.12); see `TauCeti/VENDORED.md`.
 - `attic/` — not built. `MaximalFlow.lean` (the continuous Lee 9.12, superseded by Tau Ceti's
@@ -30,4 +35,6 @@ against, so the vendored files compile unchanged.
 ## Axioms
 
 None. `contMDiff_flow_like` is now a theorem, proved from Tau Ceti's `globalFlow`; the price
-is `[FiniteDimensional ℝ EG]` on `contMDiff_expLie` and in `FakeFormIII.lean`.
+is `[FiniteDimensional ℝ EG]` on `contMDiff_expLie`, in the main `variable` blocks of
+`FundamentalVectorField`, `ConnectionForm` and `YangMills`, and `[FiniteDimensional ℝ E]` in
+the frame-bundle Yang–Mills section of `FrameBundle.lean`.

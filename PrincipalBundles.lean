@@ -1,7 +1,11 @@
 import PrincipalBundles.ExpLie
-import PrincipalBundles.FakeFormIII
+import PrincipalBundles.SmoothRightGAction
+import PrincipalBundles.PrincipalBundle
+import PrincipalBundles.FundamentalVectorField
+import PrincipalBundles.ConnectionForm
+import PrincipalBundles.Forms
+import PrincipalBundles.YangMills
 import PrincipalBundles.FrameBundle
+import PrincipalBundles.UnitsMFDeriv
 import PrincipalBundles.FundamentalVF
 import PrincipalBundles.GradedDiffLieAlg
-import PrincipalBundles.SmoothRightGAction
-import PrincipalBundles.UnitsMFDeriv
