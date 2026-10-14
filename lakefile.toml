@@ -1,0 +1,17 @@
+name = "PrincipalBundles"
+defaultTargets = ["PrincipalBundles"]
+
+# Pinned to the Mathlib commit used by the vendored Tau Ceti files (TauCeti/VENDORED.md),
+# so those files build unchanged. Bump this, the manifest and lean-toolchain together.
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "3b531c35df33d6bbe64b4e87dec056211d3a5676"
+
+# Files copied from Tau Ceti; see TauCeti/VENDORED.md.
+[[lean_lib]]
+name = "TauCeti"
+globs = ["TauCeti.+"]
+
+[[lean_lib]]
+name = "PrincipalBundles"
