@@ -37,7 +37,7 @@ The key steps, following Meinrenken §3–4, are:
   from Tau Ceti's maximal flow; this is why `G` must be finite-dimensional.
 -/
 
-open Set Bundle ContDiff Manifold Trivialization
+ open Set Bundle ContDiff Manifold Trivialization
 
 
 variable
@@ -87,14 +87,15 @@ lemma IsMIntegralCurve.left_translate
       (n := minSmoothness ℝ 3)).mdifferentiable h1 |>.mdifferentiableAt
   intro t
   rw [mulInvariantVectorField_left_invariant]
-  convert ((hMDiff g (γ t)).hasMFDerivAt.comp t (hγ t)) using 1
-  ext
-  simp only [ContinuousLinearMap.smulRight_apply, ContinuousLinearMap.one_apply, one_smul]
-  have h2 : (((mfderiv% fun x ↦ g * x) (γ t)).comp
-    (ContinuousLinearMap.smulRight (1 : ℝ →L[ℝ] ℝ) (mulInvariantVectorField v (γ t)))) 1 =
-    ((mfderiv% fun x ↦ g * x) (γ t)) (mulInvariantVectorField v (γ t)) := by
-      simp [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smulRight_apply]
-  exact h2.symm
+  have hderiv :
+      (mfderiv% fun x ↦ g * x) (γ t) ∘SL
+          ContinuousLinearMap.smulRight (1 : ℝ →L[ℝ] ℝ) (mulInvariantVectorField v (γ t))
+        = ContinuousLinearMap.smulRight (1 : ℝ →L[ℝ] ℝ)
+            ((mfderiv% fun x ↦ g * x) (γ t) (mulInvariantVectorField v (γ t))) := by
+    ext
+    simp [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smulRight_apply]
+  rw [← hderiv]
+  exact (hMDiff g (γ t)).hasMFDerivAt.comp t (hγ t)
 
 lemma IsMIntegralCurveOn.left_translate
     (γ : ℝ → G) (v : GroupLieAlgebra IG G) (s : Set ℝ)
@@ -106,14 +107,15 @@ lemma IsMIntegralCurveOn.left_translate
       (by simp [minSmoothness_of_isRCLikeNormedField]) |>.mdifferentiableAt
   intro t ht
   rw [mulInvariantVectorField_left_invariant]
-  convert ((hMDiff g (γ t)).hasMFDerivAt.comp_hasMFDerivWithinAt t (hγ t ht)) using 1
-  ext
-  simp only [ContinuousLinearMap.smulRight_apply, ContinuousLinearMap.one_apply, one_smul]
-  have h2 : (((mfderiv% fun x ↦ g * x) (γ t)).comp
-      (ContinuousLinearMap.smulRight (1 : ℝ →L[ℝ] ℝ) (mulInvariantVectorField v (γ t)))) 1 =
-      ((mfderiv% fun x ↦ g * x) (γ t)) (mulInvariantVectorField v (γ t)) := by
-    simp [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smulRight_apply]
-  exact h2.symm
+  have hderiv :
+      (mfderiv% fun x ↦ g * x) (γ t) ∘SL
+          ContinuousLinearMap.smulRight (1 : ℝ →L[ℝ] ℝ) (mulInvariantVectorField v (γ t))
+        = ContinuousLinearMap.smulRight (1 : ℝ →L[ℝ] ℝ)
+            ((mfderiv% fun x ↦ g * x) (γ t) (mulInvariantVectorField v (γ t))) := by
+    ext
+    simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smulRight_apply, one_apply_eq_self, one_smul]
+  rw [← hderiv]
+  exact (hMDiff g (γ t)).hasMFDerivAt.comp_hasMFDerivWithinAt t (hγ t ht)
 
 end Foo
 
@@ -331,8 +333,9 @@ theorem smooth_tangentBundle_mk (b : G) :
       have h0 : b ∈ (trivializationAt EG (TangentSpace IG) b).baseSet :=
         FiberBundle.mem_baseSet_trivializationAt' b
       simp only [(trivializationAt EG (TangentSpace IG) b).continuousLinearMapAt_apply ℝ b]
-      simp only [TangentBundle.trivializationAt_baseSet, mem_chart_source, coe_linearMapAt_of_mem]
-      exact Prod.fst_eq_iff.mp rfl
+      refine Prod.ext ?_ ?_
+      · exact coe_coe_fst (trivializationAt EG (TangentSpace IG) b) h0
+      · rw [(trivializationAt EG (TangentSpace IG) b).coe_linearMapAt_of_mem h0]
     exact ⟨(trivializationAt EG (TangentSpace IG) b).continuousLinearMapAt ℝ b, h1⟩
   obtain ⟨L, hL⟩ := h_linear
   simpa only [hL] using L.contDiff.contMDiff.contMDiffAt
@@ -355,8 +358,13 @@ theorem mfderiv_mul_apply_zero_right
     simp [minSmoothness_of_isRCLikeNormedField]
   have hf : MDifferentiableAt (IG.prod IG) IG (fun p : G × G => p.1 * p.2) (g, 1) :=
     (contMDiff_mul (𝕜 := ℝ) (I := IG) (n := minSmoothness ℝ 3)).mdifferentiableAt fu
-  rw [mfderiv_prod_eq_add_apply hf]
-  simp [map_zero]
+  have key := mfderiv_prod_eq_add_apply (I := IG) (I' := IG) (I'' := IG)
+    (f := fun p : G × G => p.1 * p.2) (p := (g, (1:G)))
+    (v := ((0, ξ) : TangentSpace (IG.prod IG) (g, (1:G)))) hf
+  show ((mfderiv (IG.prod IG) IG (fun p : G × G => p.1 * p.2) (g, 1)) ((0 : EG), ξ) : EG) = _
+  rw [key]
+  simp only [add_eq_right]
+  exact map_zero _
 
 theorem dMultProd_zeroSectionProdFiber_eq (g : G) (ξ : EG) :
     dMultProd (IG := IG) (zeroSectionProdFiber (IG := IG) (g, ξ)) =
@@ -411,6 +419,7 @@ lemma isMIntegralCurve_prod_mk
       (fun p : G × EG => (X₁ p.1, X₂ p.2)) := by
   intro t;
   convert HasMFDerivAt.prodMk ( h₁ t ) ( h₂ t ) using 1
+  exact Eq.to_iff rfl
 
 public lemma expLie_zero
     [T2Space G]
@@ -429,6 +438,16 @@ public lemma expLie_zero
   have := congr_fun heq 1
   simp only [expLie] at this ⊢
   exact this.symm
+
+noncomputable
+local instance : SeminormedAddCommGroup (TangentSpace IG (1 : G)) :=
+  inferInstanceAs (SeminormedAddCommGroup EG)
+noncomputable
+local instance : NormedAddCommGroup (TangentSpace IG (1 : G)) :=
+  inferInstanceAs (NormedAddCommGroup EG)
+noncomputable
+local instance : NormedSpace ℝ (TangentSpace IG (1 : G)) :=
+  inferInstanceAs (NormedSpace ℝ EG)
 
 public theorem contMDiff_expLie [T2Space G] [CompleteSpace EG] [FiniteDimensional ℝ EG]
     [BoundarylessManifold IG G] :
@@ -471,8 +490,11 @@ lemma IsMIntegralCurve.time_shift
   have hshift : HasMFDerivAt 𝓘(ℝ, ℝ) 𝓘(ℝ, ℝ) (fun t ↦ s + t) t
       (ContinuousLinearMap.id ℝ ℝ) := by
     have h := (hasDerivAt_id t).const_add s
-    rw [hasMFDerivAt_iff_hasFDerivAt, hasFDerivAt_iff_hasDerivAt]
-    simpa using h
+    have hid : ContinuousLinearMap.toSpanSingleton ℝ (1:ℝ) = ContinuousLinearMap.id ℝ ℝ := by
+      ext; simp
+    refine HasFDerivAt.hasMFDerivAt ?_
+    rw [← hid]
+    exact h.hasFDerivAt
   exact (hγ (s + t)).comp t hshift
 
 lemma IsMIntegralCurve.mul
@@ -500,4 +522,3 @@ public lemma expLie_add (A : GroupLieAlgebra IG G) (s t : ℝ)
     expLie (IG := IG) ((s + t) • A) = expLie (IG := IG) (s • A) * expLie (IG := IG) (t • A) :=
   IsMIntegralCurve.mul _ A (isMIntegralCurve_expLie_smul A)
     (by simp only [zero_smul]; exact expLie_zero) s t
-
