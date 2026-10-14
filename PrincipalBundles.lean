@@ -7,5 +7,4 @@ import PrincipalBundles.Forms
 import PrincipalBundles.YangMills
 import PrincipalBundles.FrameBundle
 import PrincipalBundles.UnitsMFDeriv
-import PrincipalBundles.FundamentalVF
 import PrincipalBundles.GradedDiffLieAlg
