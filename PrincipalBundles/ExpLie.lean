@@ -265,15 +265,15 @@ theorem contMDiff_flow_like
   have e3 : minSmoothness ℝ 3 = ((3 : ℕ∞) : WithTop ℕ∞) := by
     rw [minSmoothness_of_isRCLikeNormedField]; norm_cast
   rw [e2] at hX ⊢
-  haveI : IsManifold I ((2 : ℕ∞) : WithTop ℕ∞) M :=
+  have : IsManifold I ((2 : ℕ∞) : WithTop ℕ∞) M :=
     IsManifold.of_le (n := minSmoothness ℝ 3) (by rw [e3]; exact_mod_cast (by norm_num : (2 : ℕ∞) ≤ 3))
-  haveI : IsManifold I 1 M :=
+  have : IsManifold I 1 M :=
     IsManifold.of_le (n := ((2 : ℕ∞) : WithTop ℕ∞)) (by exact_mod_cast (by norm_num : (1 : ℕ∞) ≤ 2))
   have hX1 : ContMDiff I I.tangent 1 (fun x => (⟨x, X x⟩ : TangentBundle I M)) :=
     hX.of_le (by exact_mod_cast (by norm_num : (1 : ℕ∞) ≤ 2))
   -- The given orbits are defined for all time, so `X` is complete.
-  have hcomplete : ∀ x, TauCeti.maximalIntegralCurveInterval X x = Set.univ := fun x =>
-    (TauCeti.maximalIntegralCurveInterval_eq_univ_iff hX1).2 ⟨fun t => Φ t x, hΦ₀ x, hΦ x⟩
+  have hcomplete : ∀ x, maximalIntegralCurveInterval X x = Set.univ := fun x =>
+    (maximalIntegralCurveInterval_eq_univ_iff hX1).2 ⟨fun t => Φ t x, hΦ₀ x, hΦ x⟩
   -- Each orbit `t ↦ Φ t x` is the orbit of the flow through `x`.
   have hΦeq : (fun p : ℝ × M => Φ p.1 p.2) =
       fun p => TauCeti.globalFlow X hX1 hcomplete p.1 p.2 := by
