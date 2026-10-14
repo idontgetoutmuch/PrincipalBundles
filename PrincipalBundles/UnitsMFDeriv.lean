@@ -48,7 +48,8 @@ lemma mfderiv_units_mulLeft (a g : Fˣ) (v : F) :
   rw [hd.mfderiv_abuse]
   simp only [modelWithCornersSelf_coe, Set.range_id, fderivWithin_univ]
   rw [show extChartAt 𝓘(ℝ, F) g g = (g : F) from rfl, hw.fderiv_eq, ContinuousLinearMap.fderiv]
-  simp
+  -- `mul ℝ F a v = a * v` holds by `rfl`; `simp` cannot see through the `TangentSpace` typing.
+  rfl
 
 /-- The manifold derivative of the two-sided multiplication `h ↦ a * h * b` on `Fˣ`, computed at
 the identity, is `v ↦ a.val * v * b.val` on the model space `F`. -/
@@ -64,6 +65,7 @@ lemma mfderiv_units_mul_mul (a b : Fˣ) (A : F) :
   simp only [modelWithCornersSelf_coe, Set.range_id, fderivWithin_univ]
   rw [show extChartAt 𝓘(ℝ, F) (1 : Fˣ) 1 = ((1 : Fˣ) : F) from rfl, hw.fderiv_eq,
     ContinuousLinearMap.fderiv]
-  simp [mul_assoc]
+  rw [mul_assoc]
+  rfl
 
 end Units
