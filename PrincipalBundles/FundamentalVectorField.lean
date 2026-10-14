@@ -367,7 +367,6 @@ lemma contMDiff_fundamentalVectorField (A : GroupLieAlgebra IG G) :
     fderivWithin_univ, fderiv_id, ContinuousLinearMap.coe_id']
   have hcomp : (↑(chartAt ℝ (0:ℝ)) ∘ ↑(chartAt ℝ (0:ℝ)).symm) = (id : ℝ → ℝ) := by
     funext y; simp [chartAt]
-    exact OpenPartialHomeomorph.right_inv (ChartedSpace.chartAt 0) trivial
   rw [hcomp, fderiv_id]
   exact rfl
 
