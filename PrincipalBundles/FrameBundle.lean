@@ -155,15 +155,15 @@ lemma isUnit_conj_iff (Φ : E ≃L[𝕜] E) (f : E →L[𝕜] E) :
       rw [this]
       exact ContinuousLinearEquiv.apply_symm_apply Φ v
 
+omit [CompleteSpace 𝕜] [CompleteSpace E] [IsManifold I 1 M] in
 /-- Frames at `x` compose as endomorphisms of the model space. Stated for every `x : M`, not
 only for `p.proj` with `p` in a particular total space, so that instance search finds it at any
 base point (e.g. `q.proj` in `FrameBundle`). -/
-omit [CompleteSpace 𝕜] [CompleteSpace E] [IsManifold I 1 M] in
 instance (x : M) : Monoid (Trivial M E x →L[𝕜] TangentSpace I x) :=
   inferInstanceAs (Monoid (E →L[𝕜] E))
 
-/-- Coframes at `x` compose as endomorphisms of the model space; see the instance above. -/
 omit [CompleteSpace 𝕜] [CompleteSpace E] [IsManifold I 1 M] in
+/-- Coframes at `x` compose as endomorphisms of the model space; see the instance above. -/
 instance (x : M) : Monoid (TangentSpace I x →L[𝕜] E) :=
   inferInstanceAs (Monoid (E →L[𝕜] E))
 
@@ -387,9 +387,7 @@ lemma frameBundleAction_free [IsManifold I ∞ M]
       rw [← hu]
       exact congrArg (fun F => F w) u.inv_val
     intro a b hab
-    calc a = u.inv (p.1.2 a) := (key a).symm
-      _ = u.inv (p.1.2 b) := by rw [hab]
-      _ = b := key b
+    exact (key a).symm.trans ((congrArg u.inv hab).trans (key b))
   have h2 : (MulOpposite.unop g).val = (1 : E →L[𝕜] E) :=
     ContinuousLinearMap.ext fun v => hinj (congrArg (fun F => F v) h1)
   rw [Subgroup.mem_bot]
@@ -419,11 +417,15 @@ def frameBundleEquiv [IsManifold I ∞ M] :
   left_inv p := by
     apply Subtype.ext; apply Bundle.TotalSpace.ext
     · rfl
-    · simp [IsUnit.unit_spec]
+    · first
+        | exact heq_of_eq (IsUnit.unit_spec _)
+        | exact IsUnit.unit_spec _
   right_inv q := by
     apply Bundle.TotalSpace.ext
     · rfl
-    · simp
+    · first
+        | exact heq_of_eq (Units.ext (IsUnit.unit_spec _))
+        | exact Units.ext (IsUnit.unit_spec _)
 
 lemma frameBundleFiberBundleCore_coordChange_val (i j : atlas H M) (x : M)
     (hx : x ∈ i.1.source ∩ j.1.source) (g : (E →L[𝕜] E)ˣ) :
@@ -458,7 +460,8 @@ lemma intertwining_forward [IsManifold I ∞ M]
   exact (frameBundleFiberBundleCore (I := I) (M := M)).baseSet
     (frameBundleFiberBundleCore (I := I) (M := M) |>.indexAt q.proj) ×ˢ Set.univ
   · exact IsOpen.prod (frameBundleFiberBundleCore (I := I) (M := M) |>.isOpen_baseSet _) isOpen_univ
-  · simp +decide []
+  · exact Set.mk_mem_prod
+      ((frameBundleFiberBundleCore (I := I) (M := M)).mem_baseSet_at q.proj) (Set.mem_univ _)
   · simp +decide only [FiberBundleCore.baseSet_at, FiberBundleCore.proj,
       FiberBundleCore.localTrivAt_def, Set.mem_prod, Set.mem_univ, and_true,
       hom_trivializationAt_apply, Prod.mk.injEq, true_and, Prod.forall]
