@@ -18,8 +18,8 @@ stand-alone Lake project on top of Mathlib. Moved out of the `smooth-exp-Lie-V` 
   - `UnitsMFDeriv.lean`, `GradedDiffLieAlg.lean`.
   - `FrameBundle.lean` — the frame bundle as a principal `GL(E)`-bundle. Its local
     trivialisations are those of the Hom bundle restricted to invertible frames
-    (`Trivialization.restrictUnits`). Being ported; not in the default build. Check it with
-    `lake build PrincipalBundles.FrameBundle`.
+    (`Trivialization.restrictUnits`). `frameBundleYangMills_transformation` is the
+    gauge transformation law in coordinates.
 - `TauCeti/` — files copied unchanged from Tau Ceti for the maximal flow of a vector field
   (Lee Thm 9.12); see `TauCeti/VENDORED.md`.
 - `attic/` — not built. `MaximalFlow.lean` (the continuous Lee 9.12, superseded by Tau Ceti's
