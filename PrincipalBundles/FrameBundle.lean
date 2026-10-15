@@ -277,18 +277,19 @@ omit [CompleteSpace E] [CompleteSpace 𝕜] in
 lemma tangentBundleCore_coordChange_isUnit (i j : atlas H M)
     (x : M) (hx : x ∈ i.1.source ∩ j.1.source) :
     IsUnit ((tangentBundleCore I M).coordChange i j x) := by
-  have h_inv : (tangentBundleCore I M).coordChange j i x ∘L
-    (tangentBundleCore I M).coordChange i j x = ContinuousLinearMap.id 𝕜 E := by
-    have := ( tangentBundleCore I M ).coordChange_comp i j i x;
-    ext v; exact (by
-    convert this ⟨ ⟨ hx.1, hx.2 ⟩, hx.1 ⟩ v using 1;
-    exact Eq.symm ( ( tangentBundleCore I M ).coordChange_self i x hx.1 v ))
-  have h_inv : (tangentBundleCore I M).coordChange i j x ∘L
-  (tangentBundleCore I M).coordChange j i x = ContinuousLinearMap.id 𝕜 E := by
-    have := ( tangentBundleCore I M ).coordChange_comp j i j x ⟨ ⟨ hx.2, hx.1 ⟩, hx.2 ⟩;
-    exact ContinuousLinearMap.ext fun v => by
-     simpa using this v |> Eq.trans <| ( tangentBundleCore I M ).coordChange_self j x hx.2 v
-  exact ⟨ ⟨ _, _, h_inv, by assumption ⟩, rfl ⟩
+  have h_ji : (tangentBundleCore I M).coordChange j i x ∘L
+      (tangentBundleCore I M).coordChange i j x = ContinuousLinearMap.id 𝕜 E := by
+    ext v
+    rw [ContinuousLinearMap.comp_apply,
+      (tangentBundleCore I M).coordChange_comp i j i x ⟨⟨hx.1, hx.2⟩, hx.1⟩ v,
+      (tangentBundleCore I M).coordChange_self i x hx.1 v, ContinuousLinearMap.id_apply]
+  have h_ij : (tangentBundleCore I M).coordChange i j x ∘L
+      (tangentBundleCore I M).coordChange j i x = ContinuousLinearMap.id 𝕜 E := by
+    ext v
+    rw [ContinuousLinearMap.comp_apply,
+      (tangentBundleCore I M).coordChange_comp j i j x ⟨⟨hx.2, hx.1⟩, hx.2⟩ v,
+      (tangentBundleCore I M).coordChange_self j x hx.2 v, ContinuousLinearMap.id_apply]
+  exact ⟨⟨_, _, h_ij, h_ji⟩, rfl⟩
 
 @[reducible, nolint unusedArguments]
 def FrameSpace (_I : ModelWithCorners 𝕜 E H) (_M : Type*) [TopologicalSpace _M] [ChartedSpace H _M]
@@ -307,7 +308,7 @@ noncomputable def frameBundleFiberBundleCore [CompleteSpace 𝕜] :
       exact (hunit.unit * g)
     · exact g
   coordChange_self i x hx g := by
-    simp only [show x ∈ i.1.source ∩ i.1.source from ⟨hx, hx⟩, dif_pos]
+    simp only [show x ∈ i.1.source ∩ i.1.source from Set.mem_inter hx hx, dif_pos]
     have key := (tangentBundleCore I M).coordChange_self i x hx
     simp only at key
     ext v
@@ -376,27 +377,21 @@ lemma frameBundleAction_respects_fibres [IsManifold I ∞ M]
     frameBundleProj (p <• g) = frameBundleProj p := by
   rfl
 
-set_option maxHeartbeats 800000 in
--- who knows
 omit [CompleteSpace 𝕜] in
 lemma frameBundleAction_free [IsManifold I ∞ M]
     (p : ↥(FrameBundle I M)) :
     MulAction.stabilizer (MulOpposite (Units (E →L[𝕜] E))) p = ⊥ := by
-  apply eq_bot_iff.mpr _
+  rw [eq_bot_iff]
   intro g hg
-  obtain ⟨g', hg'⟩ : ∃ g' : (E →L[𝕜] E)ˣ, g = MulOpposite.op g' := ⟨_, rfl⟩
-  have h_inv : p.1.2 ∘L (g' : E →L[𝕜] E) = p.1.2 := by
-    convert congr_arg Subtype.val hg using 1
-    constructor <;> intro h <;> ext <;>simp_all +decide only [MulAction.mem_stabilizer_iff]
-    · grind +locals
-    · convert congr_arg (fun q : ↥(FrameBundle I M) => q.val.2 ‹_›) hg using 1
-  have h_inv : (g' : E →L[𝕜] E) = 1 := by
-    have h_inj : Function.Injective p.1.2 :=
-      p.2.exists_left_inv.elim fun x hx =>
-        Function.LeftInverse.injective (fun y => by simpa using congr_arg (fun f => f y) hx)
-    exact ContinuousLinearMap.ext fun x => h_inj <| by
-      simpa using congr_arg (fun f => f x) ‹p.1.snd ∘L ↑g' = p.1.snd›
-  cases g'; aesop
+  rw [MulAction.mem_stabilizer_iff] at hg
+  -- `g • p` has the same base point as `p` and frame `p.1.2 ∘L g.unop`.
+  have h1 : p.1.2 ∘L (MulOpposite.unop g).val = p.1.2 :=
+    eq_of_heq (congr_arg_heq (fun q : ↥(FrameBundle I M) => q.1.2) hg)
+  -- A frame is invertible, so it cancels on the left.
+  have h2 : (MulOpposite.unop g).val = (1 : E →L[𝕜] E) :=
+    (show IsUnit (p.1.2 : E →L[𝕜] E) from p.2).mul_left_cancel (by rw [mul_one]; exact h1)
+  rw [Subgroup.mem_bot]
+  exact MulOpposite.unop_injective (Units.ext (h2.trans Units.val_one.symm))
 
 -- Complete replacement for `section Foo` ... `end Foo` in FrameBundle.lean
 --
