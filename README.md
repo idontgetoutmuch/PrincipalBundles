@@ -15,7 +15,9 @@ stand-alone Lake project on top of Mathlib. Moved out of the `smooth-exp-Lie-V` 
   - `FundamentalVectorField.lean` — fundamental vector fields, `Ad`, `maurerCartan`.
   - `ConnectionForm.lean`, `Forms.lean`, `YangMills.lean` — connection forms,
     `yangMills_transformation`.
-  - `FrameBundle.lean`, `UnitsMFDeriv.lean`, `GradedDiffLieAlg.lean`.
+  - `UnitsMFDeriv.lean`, `GradedDiffLieAlg.lean`.
+  - `FrameBundle.lean` — being ported; not in the default build. Check it with
+    `lake build PrincipalBundles.FrameBundle`.
 - `TauCeti/` — files copied unchanged from Tau Ceti for the maximal flow of a vector field
   (Lee Thm 9.12); see `TauCeti/VENDORED.md`.
 - `attic/` — not built. `MaximalFlow.lean` (the continuous Lee 9.12, superseded by Tau Ceti's

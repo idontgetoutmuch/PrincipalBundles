@@ -5,6 +5,5 @@ import PrincipalBundles.FundamentalVectorField
 import PrincipalBundles.ConnectionForm
 import PrincipalBundles.Forms
 import PrincipalBundles.YangMills
-import PrincipalBundles.FrameBundle
 import PrincipalBundles.UnitsMFDeriv
 import PrincipalBundles.GradedDiffLieAlg
