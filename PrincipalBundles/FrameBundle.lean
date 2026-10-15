@@ -155,19 +155,17 @@ lemma isUnit_conj_iff (Φ : E ≃L[𝕜] E) (f : E →L[𝕜] E) :
       rw [this]
       exact ContinuousLinearEquiv.apply_symm_apply Φ v
 
-instance : ∀ (p : TotalSpace (E →L[𝕜] E) fun x ↦ Trivial M E x →L[𝕜] TangentSpace I x),
-  Monoid (Trivial M E p.proj →L[𝕜] TangentSpace I p.proj) := by
-    intro p
-    change Monoid (E →L[𝕜] E)
-    haveI : Monoid (E →L[𝕜] E) := inferInstance
-    exact ContinuousLinearMap.monoidWithZero.toMonoid
+/-- Frames at `x` compose as endomorphisms of the model space. Stated for every `x : M`, not
+only for `p.proj` with `p` in a particular total space, so that instance search finds it at any
+base point (e.g. `q.proj` in `FrameBundle`). -/
+omit [CompleteSpace 𝕜] [CompleteSpace E] [IsManifold I 1 M] in
+instance (x : M) : Monoid (Trivial M E x →L[𝕜] TangentSpace I x) :=
+  inferInstanceAs (Monoid (E →L[𝕜] E))
 
-instance : ∀ (p : TotalSpace (E →L[𝕜] E) fun (x : M) ↦ TangentSpace I x →L[𝕜] E),
-  Monoid (TangentSpace I p.proj →L[𝕜] E) := by
-  intro p
-  change Monoid (E →L[𝕜] E)
-  haveI : Monoid (E →L[𝕜] E) := inferInstance
-  exact ContinuousLinearMap.monoidWithZero.toMonoid
+/-- Coframes at `x` compose as endomorphisms of the model space; see the instance above. -/
+omit [CompleteSpace 𝕜] [CompleteSpace E] [IsManifold I 1 M] in
+instance (x : M) : Monoid (TangentSpace I x →L[𝕜] E) :=
+  inferInstanceAs (Monoid (E →L[𝕜] E))
 
 /-- The frame bundle of a smooth manifold `M` is the open subset of the
     Hom bundle `Hom(TM, TM)` consisting of invertible elements. -/
@@ -309,14 +307,9 @@ noncomputable def frameBundleFiberBundleCore [CompleteSpace 𝕜] :
     · exact g
   coordChange_self i x hx g := by
     simp only [show x ∈ i.1.source ∩ i.1.source from Set.mem_inter hx hx, dif_pos]
-    have key := (tangentBundleCore I M).coordChange_self i x hx
-    simp only at key
     ext v
-    have bar : ((tangentBundleCore I M).coordChange i i x) (g.val v) = g.val v := key (g.val v)
-    simp only [tangentBundleCore_coordChange, OpenPartialHomeomorph.extend, PartialEquiv.coe_trans,
-      ModelWithCorners.toPartialEquiv_coe, toFun_eq_coe, PartialEquiv.coe_trans_symm, coe_coe_symm,
-      ModelWithCorners.toPartialEquiv_coe_symm, Function.comp_apply] at bar
-    exact bar
+    -- `(u * g) v = u (g v)` by definition, and `u` is the tangent coordinate change `i → i`.
+    exact (tangentBundleCore I M).coordChange_self i x hx (g.val v)
   continuousOn_coordChange i j := by
     rw [(Units.isOpenEmbedding_val (R := E →L[𝕜] E)).isEmbedding.continuousOn_iff]
     apply ContinuousOn.congr
@@ -387,9 +380,18 @@ lemma frameBundleAction_free [IsManifold I ∞ M]
   -- `g • p` has the same base point as `p` and frame `p.1.2 ∘L g.unop`.
   have h1 : p.1.2 ∘L (MulOpposite.unop g).val = p.1.2 :=
     eq_of_heq (congr_arg_heq (fun q : ↥(FrameBundle I M) => q.1.2) hg)
-  -- A frame is invertible, so it cancels on the left.
+  -- A frame is invertible, hence injective, so it cancels on the left.
+  obtain ⟨u, hu⟩ := p.2
+  have hinj : Function.Injective p.1.2 := by
+    have key : ∀ w, u.inv (p.1.2 w) = w := fun w => by
+      rw [← hu]
+      exact congrArg (fun F => F w) u.inv_val
+    intro a b hab
+    calc a = u.inv (p.1.2 a) := (key a).symm
+      _ = u.inv (p.1.2 b) := by rw [hab]
+      _ = b := key b
   have h2 : (MulOpposite.unop g).val = (1 : E →L[𝕜] E) :=
-    (show IsUnit (p.1.2 : E →L[𝕜] E) from p.2).mul_left_cancel (by rw [mul_one]; exact h1)
+    ContinuousLinearMap.ext fun v => hinj (congrArg (fun F => F v) h1)
   rw [Subgroup.mem_bot]
   exact MulOpposite.unop_injective (Units.ext (h2.trans Units.val_one.symm))
 
