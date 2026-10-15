@@ -155,19 +155,15 @@ lemma isUnit_conj_iff (Φ : E ≃L[𝕜] E) (f : E →L[𝕜] E) :
       rw [this]
       exact ContinuousLinearEquiv.apply_symm_apply Φ v
 
-instance : ∀ (p : TotalSpace (E →L[𝕜] E) fun x ↦ Trivial M E x →L[𝕜] TangentSpace I x),
-  Monoid (Trivial M E p.proj →L[𝕜] TangentSpace I p.proj) := by
-    intro p
-    change Monoid (E →L[𝕜] E)
-    haveI : Monoid (E →L[𝕜] E) := inferInstance
-    exact ContinuousLinearMap.monoidWithZero.toMonoid
+/-- Frames at `x` compose as endomorphisms of the model space. Stated for every `x : M`, not
+only for `p.proj` with `p` in a particular total space, so that instance search finds it at any
+base point (e.g. `q.proj` in `FrameBundle`). -/
+instance (x : M) : Monoid (Trivial M E x →L[𝕜] TangentSpace I x) :=
+  inferInstanceAs (Monoid (E →L[𝕜] E))
 
-instance : ∀ (p : TotalSpace (E →L[𝕜] E) fun (x : M) ↦ TangentSpace I x →L[𝕜] E),
-  Monoid (TangentSpace I p.proj →L[𝕜] E) := by
-  intro p
-  change Monoid (E →L[𝕜] E)
-  haveI : Monoid (E →L[𝕜] E) := inferInstance
-  exact ContinuousLinearMap.monoidWithZero.toMonoid
+/-- Coframes at `x` compose as endomorphisms of the model space; see the instance above. -/
+instance (x : M) : Monoid (TangentSpace I x →L[𝕜] E) :=
+  inferInstanceAs (Monoid (E →L[𝕜] E))
 
 /-- The frame bundle of a smooth manifold `M` is the open subset of the
     Hom bundle `Hom(TM, TM)` consisting of invertible elements. -/
