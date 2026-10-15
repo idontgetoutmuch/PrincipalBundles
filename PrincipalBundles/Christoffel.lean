@@ -46,10 +46,8 @@ which in components, with `v = ∂/∂y^ν`, is
   `D²(x ∘ y⁻¹)(y m) (Dy v)`.
 * `christoffel_transformation_chart`: the transformation law with `Ω`, `Ω⁻¹` and `dΩ` written
   as derivatives of the chart transitions.
-
-## TODO
-
-* The component form for `E = Fin n → ℝ`.
+* `christoffel_components`: for `M` modelled on `Fin n → ℝ`, the law in components,
+  `Γ'ⁱⱼν = Σ (∂yⁱ/∂xᵏ) Γᵏₗμ (∂xˡ/∂yʲ) (∂x^μ/∂y^ν) + Σ (∂yⁱ/∂xᵏ) ∂²xᵏ/∂y^ν∂yʲ`.
 -/
 
 open Bundle Set ContinuousLinearMap RightActions
@@ -109,6 +107,21 @@ def coordGauge (b₁ b₂ m : M) : (E →L[ℝ] E)ˣ :=
     (trivializationAt E (TangentSpace I) b₁) m).toUnit
 
 variable {I}
+
+/-- `τ₁⁻¹ ∘ (τ₁ ∘ τ₂⁻¹) = τ₂⁻¹` on the overlap. -/
+theorem symmL_coordChangeL (b₁ b₂ m : M)
+    (hm : m ∈ (chartAt H b₁).source ∩ (chartAt H b₂).source) (y : E) :
+    (trivializationAt E (TangentSpace I) b₁).symmL ℝ m
+        ((trivializationAt E (TangentSpace I) b₂).coordChangeL ℝ
+          (trivializationAt E (TangentSpace I) b₁) m y) =
+      (trivializationAt E (TangentSpace I) b₂).symmL ℝ m y := by
+  have h₁ : m ∈ (trivializationAt E (TangentSpace I) b₁).baseSet := hm.1
+  have h₂ : m ∈ (trivializationAt E (TangentSpace I) b₂).baseSet := hm.2
+  rw [Trivialization.coordChangeL_apply (R := ℝ) (trivializationAt E (TangentSpace I) b₂)
+      (trivializationAt E (TangentSpace I) b₁) ⟨h₂, h₁⟩,
+    Trivialization.symmL_apply (R := ℝ) (trivializationAt E (TangentSpace I) b₁) h₁,
+    Trivialization.symmL_apply (R := ℝ) (trivializationAt E (TangentSpace I) b₂) h₂,
+    Trivialization.symm_apply_apply_mk (trivializationAt E (TangentSpace I) b₁) h₁]
 
 /-- On the overlap of the two chart domains, `σ₁ <• Ω = σ₂`. -/
 theorem coordFrame_smul_coordGauge (b₁ b₂ m : M)
@@ -363,3 +376,149 @@ theorem christoffel_transformation_chart
     coe_coordGauge_of_boundaryless b₁ b₂ m hm]
 
 end SchullerForm
+
+/-! ### Components
+
+For `M` modelled on `ℝⁿ = Fin n → ℝ`, write `e_i` for the standard basis, `x` for the chart at
+`b₁` and `y` for the chart at `b₂`. Then
+
+* `coordVec b m μ` is `∂/∂x^μ` at `m` (for the chart at `b`);
+* `jac b₁ b₂ m i j` is `∂xⁱ/∂yʲ` at `m`;
+* `hess b₁ b₂ m k ν j` is `∂²xᵏ/∂y^ν∂yʲ` at `m`;
+* `christoffel τ b m k l μ` is `Γᵏₗμ`, the `(k, l)` entry of `Γ(∂/∂x^μ)`. -/
+
+section Components
+
+variable {n : ℕ}
+  {M : Type*} [TopologicalSpace M] [ChartedSpace (Fin n → ℝ) M]
+  [IsManifold 𝓘(ℝ, Fin n → ℝ) ∞ M]
+
+/-- The standard basis vector `e_i` of `ℝⁿ`, in the form `pi_eq_sum_univ` uses. -/
+def stdVec (i : Fin n) : Fin n → ℝ := fun j => if i = j then 1 else 0
+
+/-- A linear map on `ℝⁿ` in components: `(A w)ⁱ = Σₖ Aⁱₖ wᵏ`. -/
+theorem clm_apply_eq_sum (A : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)) (w : Fin n → ℝ) (i : Fin n) :
+    A w i = ∑ k, A (stdVec k) i * w k := by
+  conv_lhs => rw [pi_eq_sum_univ w]
+  simp only [map_sum, map_smul, Finset.sum_apply, Pi.smul_apply, smul_eq_mul, stdVec]
+  exact Finset.sum_congr rfl fun k _ => mul_comm _ _
+
+/-- The coordinate vector `∂/∂x^μ` at `m` for the chart at `b`. -/
+def coordVec (b m : M) (μ : Fin n) : TangentSpace 𝓘(ℝ, Fin n → ℝ) m :=
+  (trivializationAt (Fin n → ℝ) (TangentSpace 𝓘(ℝ, Fin n → ℝ)) b).symmL ℝ m (stdVec μ)
+
+/-- The Jacobian entry `∂xⁱ/∂yʲ` at `m`, with `x` the chart at `b₁` and `y` the chart at `b₂`. -/
+def jac (b₁ b₂ m : M) (i j : Fin n) : ℝ :=
+  fderiv ℝ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₁ ∘ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂).symm)
+    (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂ m) (stdVec j) i
+
+/-- The second derivative `∂²xᵏ/∂y^ν∂yʲ` at `m`. -/
+def hess (b₁ b₂ m : M) (k ν j : Fin n) : ℝ :=
+  fderiv ℝ (fderiv ℝ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₁ ∘ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂).symm))
+    (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂ m) (stdVec ν) (stdVec j) k
+
+/-- `Dy (∂/∂y^ν) = e_ν`. -/
+theorem mfderiv_extChartAt_coordVec {b m : M} (hm : m ∈ (chartAt (Fin n → ℝ) b).source)
+    (ν : Fin n) :
+    mfderiv 𝓘(ℝ, Fin n → ℝ) 𝓘(ℝ, Fin n → ℝ) (extChartAt 𝓘(ℝ, Fin n → ℝ) b) m
+      (coordVec b m ν) = stdVec ν := by
+  rw [← TangentBundle.continuousLinearMapAt_trivializationAt hm]
+  exact (trivializationAt (Fin n → ℝ) (TangentSpace 𝓘(ℝ, Fin n → ℝ)) b).continuousLinearMapAt_symmL
+    hm (stdVec ν)
+
+/-- `∂/∂y^ν = Σ_μ (∂x^μ/∂y^ν) ∂/∂x^μ`. -/
+theorem coordVec_eq_sum (b₁ b₂ m : M)
+    (hm : m ∈ (chartAt (Fin n → ℝ) b₁).source ∩ (chartAt (Fin n → ℝ) b₂).source) (ν : Fin n) :
+    coordVec b₂ m ν = ∑ μ, jac b₁ b₂ m μ ν • coordVec b₁ m μ := by
+  have hΩ : (trivializationAt (Fin n → ℝ) (TangentSpace 𝓘(ℝ, Fin n → ℝ)) b₂).coordChangeL ℝ
+      (trivializationAt (Fin n → ℝ) (TangentSpace 𝓘(ℝ, Fin n → ℝ)) b₁) m (stdVec ν) =
+      fderiv ℝ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₁ ∘ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂).symm)
+        (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂ m) (stdVec ν) :=
+    congrArg (fun A : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ) => A (stdVec ν))
+      (coe_coordGauge_of_boundaryless (I := 𝓘(ℝ, Fin n → ℝ)) b₁ b₂ m hm)
+  unfold coordVec
+  rw [← symmL_coordChangeL b₁ b₂ m hm, hΩ,
+    pi_eq_sum_univ (fderiv ℝ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₁ ∘
+      (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂).symm) (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂ m) (stdVec ν)),
+    map_sum]
+  simp only [map_smul]
+  rfl
+
+variable
+  [SmoothRightGAction ∞ (modelWithCornersSelf ℝ ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ)))
+    ((𝓘(ℝ, Fin n → ℝ)).prod (modelWithCornersSelf ℝ ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ))))
+    ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ))ˣ ↑(FrameBundle 𝓘(ℝ, Fin n → ℝ) M)]
+
+/-- The local connection form `Γ = σ^* ω` of the coordinate frame of the chart at `b`, as a
+matrix-valued 1-form. -/
+def christoffelForm
+    (τ : ConnectionForm (G := ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ))ˣ)
+      (IG := modelWithCornersSelf ℝ ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ)))
+      (IB := 𝓘(ℝ, Fin n → ℝ)) (P := ↑(FrameBundle 𝓘(ℝ, Fin n → ℝ) M)))
+    (b m : M) :
+    TangentSpace 𝓘(ℝ, Fin n → ℝ) m →L[ℝ] ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ)) :=
+  @id (TangentSpace 𝓘(ℝ, Fin n → ℝ) m →L[ℝ] ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ)))
+    (yangMillsField τ (coordFrame 𝓘(ℝ, Fin n → ℝ) b) m)
+
+/-- The Christoffel symbol `Γᵏₗμ` of the chart at `b`, at `m`. -/
+def christoffel
+    (τ : ConnectionForm (G := ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ))ˣ)
+      (IG := modelWithCornersSelf ℝ ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ)))
+      (IB := 𝓘(ℝ, Fin n → ℝ)) (P := ↑(FrameBundle 𝓘(ℝ, Fin n → ℝ) M)))
+    (b m : M) (k l μ : Fin n) : ℝ :=
+  christoffelForm τ b m (coordVec b m μ) (stdVec l) k
+
+/-- **The Christoffel transformation law in components** (Schuller, Example 22.7).
+
+With `x` the chart at `b₁` and `y` the chart at `b₂`,
+
+  `Γ'ⁱⱼν = Σₖ Σₗ Σ_μ (∂yⁱ/∂xᵏ) Γᵏₗμ (∂xˡ/∂yʲ) (∂x^μ/∂y^ν) + Σₖ (∂yⁱ/∂xᵏ) ∂²xᵏ/∂y^ν∂yʲ`. -/
+theorem christoffel_components
+    (τ : ConnectionForm (G := ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ))ˣ)
+      (IG := modelWithCornersSelf ℝ ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ)))
+      (IB := 𝓘(ℝ, Fin n → ℝ)) (P := ↑(FrameBundle 𝓘(ℝ, Fin n → ℝ) M)))
+    (b₁ b₂ m : M)
+    (hm : m ∈ (chartAt (Fin n → ℝ) b₁).source ∩ (chartAt (Fin n → ℝ) b₂).source)
+    (i j ν : Fin n) :
+    christoffel τ b₂ m i j ν =
+      ∑ k, ∑ l, ∑ μ, jac b₂ b₁ m i k * christoffel τ b₁ m k l μ * jac b₁ b₂ m l j *
+        jac b₁ b₂ m μ ν +
+      ∑ k, jac b₂ b₁ m i k * hess b₁ b₂ m k ν j := by
+  -- the operator form, evaluated at `v = ∂/∂y^ν`, with `Dy v = e_ν`
+  have h : christoffelForm τ b₂ m (coordVec b₂ m ν) =
+      fderiv ℝ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂ ∘ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₁).symm)
+          (extChartAt 𝓘(ℝ, Fin n → ℝ) b₁ m) ∘L
+        (christoffelForm τ b₁ m (coordVec b₂ m ν)) ∘L
+        fderiv ℝ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₁ ∘ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂).symm)
+          (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂ m) +
+      fderiv ℝ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂ ∘ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₁).symm)
+          (extChartAt 𝓘(ℝ, Fin n → ℝ) b₁ m) ∘L
+        fderiv ℝ (fderiv ℝ (extChartAt 𝓘(ℝ, Fin n → ℝ) b₁ ∘
+          (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂).symm)) (extChartAt 𝓘(ℝ, Fin n → ℝ) b₂ m)
+          (stdVec ν) := by
+    have h0 := christoffel_transformation_chart τ b₁ b₂ m hm (coordVec b₂ m ν)
+    rw [mfderiv_extChartAt_coordVec hm.2 ν] at h0
+    exact h0
+  -- `Γ_x(∂/∂y^ν) = Σ_μ (∂x^μ/∂y^ν) Γ_x(∂/∂x^μ)`
+  have hv : christoffelForm τ b₁ m (coordVec b₂ m ν) =
+      ∑ μ, jac b₁ b₂ m μ ν • christoffelForm τ b₁ m (coordVec b₁ m μ) := by
+    rw [coordVec_eq_sum b₁ b₂ m hm ν, map_sum]
+    simp only [map_smul]
+  rw [hv] at h
+  unfold christoffel
+  rw [h]
+  simp only [_root_.add_apply, ContinuousLinearMap.comp_apply, Pi.add_apply]
+  -- expand the outer `D(y ∘ x⁻¹)` in both terms
+  rw [clm_apply_eq_sum _ _ i, clm_apply_eq_sum _ _ i]
+  refine congrArg₂ (· + ·) ?_ rfl
+  refine Finset.sum_congr rfl fun k _ => ?_
+  -- expand `Γ_x(v)` applied to `D(x ∘ y⁻¹) e_j`, then the sum over `μ`
+  rw [clm_apply_eq_sum _ _ k]
+  simp only [_root_.sum_apply, _root_.smul_apply, Finset.sum_apply, Pi.smul_apply, smul_eq_mul,
+    Finset.mul_sum, Finset.sum_mul]
+  refine Finset.sum_congr rfl fun l _ => Finset.sum_congr rfl fun μ _ => ?_
+  unfold jac
+  ring
+
+end Components
+
