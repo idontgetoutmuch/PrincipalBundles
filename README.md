@@ -20,6 +20,10 @@ stand-alone Lake project on top of Mathlib. Moved out of the `smooth-exp-Lie-V` 
     trivialisations are those of the Hom bundle restricted to invertible frames
     (`Trivialization.restrictUnits`). `frameBundleYangMills_transformation` is the
     gauge transformation law in coordinates.
+  - `Christoffel.lean` — coordinate frames as local sections of the frame bundle; the change
+    of frame between two charts is the Jacobian of the transition map (`coe_coordGauge`), and
+    `christoffel_transformation` is the transformation law for the local connection forms
+    (Schuller, Example 22.7).
 - `TauCeti/` — files copied unchanged from Tau Ceti for the maximal flow of a vector field
   (Lee Thm 9.12); see `TauCeti/VENDORED.md`.
 - `attic/` — not built. `MaximalFlow.lean` (the continuous Lee 9.12, superseded by Tau Ceti's
