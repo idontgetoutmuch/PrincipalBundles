@@ -370,7 +370,7 @@ lemma val_unitCoord {a : R} (h : IsUnit a) : (unitCoord a : R) = a := by
 open Classical in
 /-- The restriction of `e` to `P`, with fibre `Rˣ`. The point `p₀` is a junk value off the
 target. -/
-noncomputable def Trivialization.restrictUnits (e : Trivialization R proj) (P : Set Z)
+noncomputable def Bundle.Trivialization.restrictUnits (e : Trivialization R proj) (P : Set Z)
     (hP : ∀ z ∈ e.source, z ∈ P ↔ IsUnit (e z).2) (p₀ : P) :
     Trivialization Rˣ (fun z : P => proj z) where
   toFun z := (proj z, unitCoord (e z).2)
@@ -428,13 +428,13 @@ noncomputable def Trivialization.restrictUnits (e : Trivialization R proj) (P : 
   target_eq := rfl
   proj_toFun _ _ := rfl
 
-lemma Trivialization.restrictUnits_baseSet (e : Trivialization R proj) (P : Set Z)
+lemma Bundle.Trivialization.restrictUnits_baseSet (e : Trivialization R proj) (P : Set Z)
     (hP : ∀ z ∈ e.source, z ∈ P ↔ IsUnit (e z).2) (p₀ : P) :
     (e.restrictUnits P hP p₀).baseSet = e.baseSet :=
   rfl
 
 /-- On its source, the fibre coordinate of the restriction is the fibre coordinate of `e`. -/
-lemma Trivialization.coe_snd_restrictUnits (e : Trivialization R proj) (P : Set Z)
+lemma Bundle.Trivialization.coe_snd_restrictUnits (e : Trivialization R proj) (P : Set Z)
     (hP : ∀ z ∈ e.source, z ∈ P ↔ IsUnit (e z).2) (p₀ : P) {z : P} (hz : (z : Z) ∈ e.source) :
     ((e.restrictUnits P hP p₀ z).2 : R) = (e z).2 :=
   val_unitCoord ((hP z.1 hz).mp z.2)
