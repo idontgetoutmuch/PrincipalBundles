@@ -367,31 +367,32 @@ lemma val_unitCoord {a : R} (h : IsUnit a) : (unitCoord a : R) = a := by
   rw [dif_pos h]
   exact h.unit_spec
 
+open Classical in
 /-- The restriction of `e` to `P`, with fibre `Rˣ`. The point `p₀` is a junk value off the
 target. -/
-noncomputable def Trivialization.restrictUnits (e : Trivialization R proj) (P : Set Z)
+noncomputable def Bundle.Trivialization.restrictUnits (e : Trivialization R proj) (P : Set Z)
     (hP : ∀ z ∈ e.source, z ∈ P ↔ IsUnit (e z).2) (p₀ : P) :
     Trivialization Rˣ (fun z : P => proj z) where
   toFun z := (proj z, unitCoord (e z).2)
   invFun x :=
     if h : x.1 ∈ e.baseSet then
       ⟨e.toOpenPartialHomeomorph.symm (x.1, (x.2 : R)),
-        (hP _ (e.map_target (e.mem_target.mpr h))).mpr
+        (hP _ (e.map_target (e.mem_target (x := (x.1, (x.2 : R))) |>.mpr h))).mpr
           (by rw [e.apply_symm_apply' h]; exact x.2.isUnit)⟩
     else p₀
   source := Subtype.val ⁻¹' e.source
   target := e.baseSet ×ˢ Set.univ
-  map_source' z hz := Set.mk_mem_prod (e.mem_source.mp hz) (Set.mem_univ _)
+  map_source' z hz := Set.mk_mem_prod ((e.mem_source (x := z.1)).mp hz) (Set.mem_univ _)
   map_target' x hx := by
     have h : x.1 ∈ e.baseSet := hx.1
     simp only [Set.mem_preimage, dif_pos h]
-    exact e.map_target (e.mem_target.mpr h)
+    exact e.map_target (e.mem_target (x := (x.1, (x.2 : R))) |>.mpr h)
   left_inv' z hz := by
-    have hb : proj z ∈ e.baseSet := e.mem_source.mp hz
+    have hb : proj z ∈ e.baseSet := (e.mem_source (x := z.1)).mp hz
     apply Subtype.ext
     simp only [dif_pos hb]
-    rw [val_unitCoord ((hP _ hz).mp z.2), e.mk_proj_snd hz]
-    exact e.toOpenPartialHomeomorph.left_inv hz
+    rw [val_unitCoord ((hP z.1 hz).mp z.2), e.mk_proj_snd (x := z.1) hz]
+    exact e.toOpenPartialHomeomorph.left_inv (x := z.1) hz
   right_inv' x hx := by
     obtain ⟨b, g⟩ := x
     have h : b ∈ e.baseSet := hx.1
@@ -404,12 +405,12 @@ noncomputable def Trivialization.restrictUnits (e : Trivialization R proj) (P : 
     have hsrc : Set.MapsTo (Subtype.val : P → Z) (Subtype.val ⁻¹' e.source) e.source :=
       fun _ hz => hz
     have he : ContinuousOn (fun z : P => e z) (Subtype.val ⁻¹' e.source) :=
-      e.continuousOn.comp continuous_subtype_val.continuousOn hsrc
+      e.toOpenPartialHomeomorph.continuousOn.comp continuous_subtype_val.continuousOn hsrc
     refine ContinuousOn.prodMk
       (e.continuousOn_proj.comp continuous_subtype_val.continuousOn hsrc) ?_
     rw [Units.isOpenEmbedding_val.isInducing.continuousOn_iff]
     exact (continuous_snd.comp_continuousOn he).congr fun z hz =>
-      val_unitCoord ((hP _ hz).mp z.2)
+      val_unitCoord ((hP z.1 hz).mp z.2)
   continuousOn_invFun := by
     rw [Topology.IsInducing.subtypeVal.continuousOn_iff]
     have hf : ContinuousOn (fun x : B × Rˣ => e.toOpenPartialHomeomorph.symm (x.1, (x.2 : R)))
@@ -427,16 +428,16 @@ noncomputable def Trivialization.restrictUnits (e : Trivialization R proj) (P : 
   target_eq := rfl
   proj_toFun _ _ := rfl
 
-lemma Trivialization.restrictUnits_baseSet (e : Trivialization R proj) (P : Set Z)
+lemma Bundle.Trivialization.restrictUnits_baseSet (e : Trivialization R proj) (P : Set Z)
     (hP : ∀ z ∈ e.source, z ∈ P ↔ IsUnit (e z).2) (p₀ : P) :
     (e.restrictUnits P hP p₀).baseSet = e.baseSet :=
   rfl
 
 /-- On its source, the fibre coordinate of the restriction is the fibre coordinate of `e`. -/
-lemma Trivialization.coe_snd_restrictUnits (e : Trivialization R proj) (P : Set Z)
+lemma Bundle.Trivialization.coe_snd_restrictUnits (e : Trivialization R proj) (P : Set Z)
     (hP : ∀ z ∈ e.source, z ∈ P ↔ IsUnit (e z).2) (p₀ : P) {z : P} (hz : (z : Z) ∈ e.source) :
     ((e.restrictUnits P hP p₀ z).2 : R) = (e z).2 :=
-  val_unitCoord ((hP _ hz).mp z.2)
+  val_unitCoord ((hP z.1 hz).mp z.2)
 
 end UnitsRestrict
 
@@ -455,9 +456,8 @@ lemma hom_trivializationAt_snd_eq (b : M)
     (hb : z.proj ∈ (trivializationAt E (TangentSpace I) b).baseSet) :
     (trivializationAt (E →L[ℝ] E)
         (fun x : M => Bundle.Trivial M E x →L[ℝ] TangentSpace I x) b z).2 =
-      ContinuousLinearMap.comp (M₁ := E) (M₂ := E) (M₃ := E)
-        ((trivializationAt E (TangentSpace I) b).continuousLinearEquivAt ℝ z.proj hb :
-          TangentSpace I z.proj →L[ℝ] E) z.2 := by
+      ((trivializationAt E (TangentSpace I) b).continuousLinearEquivAt ℝ z.proj hb
+        ).toContinuousLinearMap.comp z.2 := by
   have hb_triv : z.proj ∈ (trivializationAt E (Bundle.Trivial M E) b).baseSet := by simp
   rw [hom_trivializationAt_apply (σ := RingHom.id ℝ),
     ContinuousLinearMap.inCoordinates_eq hb_triv hb]
@@ -484,10 +484,13 @@ lemma isUnit_iff_hom_trivializationAt (b : M)
       (E₁ := Bundle.Trivial M E) (E₂ := TangentSpace I) b] at h
     exact h.2
   rw [hom_trivializationAt_snd_eq b z hb]
-  exact (isUnit_comp_iff_of_isUnit
-    (ContinuousLinearEquiv.toUnit (R := ℝ) (M := E)
-      ((trivializationAt E (TangentSpace I) b).continuousLinearEquivAt ℝ z.proj hb)).isUnit
-    _).symm
+  -- `τ` is the tangent trivialisation at `z.proj`; read everything in `E →L[ℝ] E`
+  let τ := (trivializationAt E (TangentSpace I) b).continuousLinearEquivAt ℝ z.proj hb
+  let T : E →L[ℝ] E := @id (E →L[ℝ] E) τ.toContinuousLinearMap
+  let T' : E →L[ℝ] E := @id (E →L[ℝ] E) τ.symm.toContinuousLinearMap
+  have hT : IsUnit T :=
+    ⟨⟨T, T', by ext x; exact τ.apply_symm_apply x, by ext x; exact τ.symm_apply_apply x⟩, rfl⟩
+  exact (isUnit_comp_iff_of_isUnit hT (@id (E →L[ℝ] E) z.2)).symm
 
 /-- The local trivialisation of the frame bundle at `p`: the Hom-bundle trivialisation over the
 chart at `p.proj`, restricted to invertible frames. -/
@@ -531,7 +534,10 @@ noncomputable instance FrameBundle.isPrincipalBundle [IsManifold I ∞ M] :
         (fun x : M => Bundle.Trivial M E x →L[ℝ] TangentSpace I x) p.1.proj).source := hq
     have hqg : (q <• g).1 ∈ (trivializationAt (E →L[ℝ] E)
         (fun x : M => Bundle.Trivial M E x →L[ℝ] TangentSpace I x) p.1.proj).source :=
-      Trivialization.mem_source.mpr (Trivialization.mem_source.mp hq₁)
+      (trivializationAt (E →L[ℝ] E)
+        (fun x : M => Bundle.Trivial M E x →L[ℝ] TangentSpace I x) p.1.proj).mem_source.mpr
+        ((trivializationAt (E →L[ℝ] E)
+          (fun x : M => Bundle.Trivial M E x →L[ℝ] TangentSpace I x) p.1.proj).mem_source.mp hq₁)
     have hb : q.1.proj ∈ (trivializationAt E (TangentSpace I) p.1.proj).baseSet := by
       have h := (trivializationAt (E →L[ℝ] E)
         (fun x : M => Bundle.Trivial M E x →L[ℝ] TangentSpace I x) p.1.proj).mem_source.mp hq₁
@@ -624,7 +630,11 @@ theorem frameBundleYangMills_transformation
     yangMillsField τ σ₂ m v =
       (Ω m)⁻¹.val ∘L (yangMillsField τ σ₁ m v) ∘L (Ω m).val +
       (Ω m)⁻¹.val ∘L (mfderiv I (modelWithCornersSelf ℝ (E →L[ℝ] E)) Ω m v) := by
-  rw [yangMills_transformation τ σ₁ σ₂ U₁ U₂ hσ₁ hσ₂ Ω hΩ m hm v, Ad_units_eq,
-      maurerCartan_units_eq]
-  exact rfl
+  rw [yangMills_transformation τ σ₁ σ₂ U₁ U₂ hσ₁ hσ₂ Ω hΩ m hm v,
+    show (Ad (IG := modelWithCornersSelf ℝ (E →L[ℝ] E)) (Ω m)⁻¹) (yangMillsField τ σ₁ m v) = _
+      from Ad_units_eq (Ω m) _,
+    show (maurerCartan (IG := modelWithCornersSelf ℝ (E →L[ℝ] E)) (Ω m))
+        (mfderiv I (modelWithCornersSelf ℝ (E →L[ℝ] E)) Ω m v) = _
+      from maurerCartan_units_eq (Ω m) _]
+  rfl
 end FrameBundleYangMills
