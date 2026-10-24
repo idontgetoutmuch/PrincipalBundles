@@ -27,13 +27,17 @@ transformation law under a change of gauge:
 ## Main results
 
 * `mfderiv_smul_section`: Leibniz rule for the derivative of `x ↦ σ x <• Ω x`
-* `yangMills_transformation`: the gauge transformation law for Yang-Mills fields
+* `mfderiv_localTriv_apply`: the derivative of the local trivialisation `(m, g) ↦ σ m <• g`
+* `connectionForm_localTriv`: the connection form in a local trivialisation,
+  `(h^* ω)(v, γ) = Ad_{g⁻¹}((σ^* ω)(v)) + Ξ_g(γ)` (Schuller, Theorem 22.2)
+* `yangMills_transformation`: the gauge transformation law for Yang-Mills fields, as a corollary
 
 ## References
 
 * Tu, *Differential Geometry: Connections, Curvature, and Characteristic Classes*,
   Springer, 2017, §27
 * Bleecker, *Gauge Theory and Variational Principles*, §1.2
+* Schuller, *Lectures on the Geometric Anatomy of Theoretical Physics*, Lecture 22
 -/
 
 open Bundle RightActions
@@ -145,7 +149,54 @@ lemma mfderiv_smul_section
     simp only [hprod]
     exact Prod.snd_eq_iff.mpr rfl
 
-/-- The transformation law for Yang-Mills fields. -/
+omit [IsManifold IB ∞ B] [T2Space G] [CompleteSpace EG] [BoundarylessManifold IG G] in
+/-- The derivative of the local trivialisation `h(m, g) = σ m <• g` defined by a local section,
+split into the part along the base and the part along the group. -/
+lemma mfderiv_localTriv_apply (σ : B → P) (m : B) (g : G)
+    (hσ : MDifferentiableAt IB (IB.prod IG) σ m)
+    (v : TangentSpace IB m) (γ : TangentSpace IG g) :
+    mfderiv (IB.prod IG) (IB.prod IG) (fun p : B × G ↦ σ p.1 <• p.2) (m, g) (v, γ) =
+      mfderiv (IB.prod IG) (IB.prod IG) (· <• g) (σ m) (mfderiv IB (IB.prod IG) σ m v) +
+      mfderiv IG (IB.prod IG) (σ m <• ·) g γ := by
+  have hsmul : ∀ q : P × G, MDifferentiableAt ((IB.prod IG).prod IG) (IB.prod IG)
+      (fun p : P × G ↦ p.1 <• p.2) q := fun q ↦
+    (SmoothRightGAction.smooth_smul (n := ∞) (IG := IG) (IM := IB.prod IG)
+      (G := G) (M := P)).mdifferentiableAt (by norm_num)
+  have hh : MDifferentiableAt (IB.prod IG) (IB.prod IG)
+      (fun p : B × G ↦ σ p.1 <• p.2) (m, g) :=
+    (hsmul (σ m, g)).comp (f := fun p : B × G ↦ (σ p.1, p.2)) (m, g)
+      ((hσ.comp (f := Prod.fst) (m, g) mdifferentiableAt_fst).prodMk mdifferentiableAt_snd)
+  have hR : MDifferentiableAt (IB.prod IG) (IB.prod IG) (· <• g) (σ m) :=
+    (hsmul (σ m, g)).comp (f := fun z : P ↦ (z, g)) (σ m)
+      (mdifferentiableAt_id.prodMk mdifferentiableAt_const)
+  rw [mfderiv_prod_eq_add_apply hh]
+  dsimp only
+  rw [show (fun z : B ↦ σ z <• g) = (· <• g) ∘ σ from rfl, mfderiv_comp m hR hσ]
+  try rfl
+
+/-- **Schuller, Theorem 22.2.** In the local trivialisation `h(m, g) = σ m <• g` defined by a
+local section `σ`, the connection form is
+
+  `(h^* ω)_{(m,g)}(v, γ) = Ad_{g⁻¹}((σ^* ω)(v)) + Ξ_g(γ)`,
+
+with `Ξ` the Maurer–Cartan form. Schuller states this without proof; here it follows from the
+splitting `mfderiv_localTriv_apply`, equivariance of `ω`, the identification of the derivative
+of `g ↦ p <• g` as a fundamental vector field (`mfderiv_action_at_g`), and the reproducing
+property of `ω`. -/
+theorem connectionForm_localTriv
+    (τ : ConnectionForm (G := G) (IG := IG) (IB := IB) (P := P))
+    (σ : B → P) (m : B) (g : G) (hσ : MDifferentiableAt IB (IB.prod IG) σ m)
+    (v : TangentSpace IB m) (γ : TangentSpace IG g) :
+    τ.form.toFun (σ m <• g)
+        (mfderiv (IB.prod IG) (IB.prod IG) (fun p : B × G ↦ σ p.1 <• p.2) (m, g) (v, γ)) =
+      Ad g⁻¹ (yangMillsField (IB := IB) (IG := IG) τ σ m v) + maurerCartan g γ := by
+  rw [mfderiv_localTriv_apply σ m g hσ v γ, map_add,
+    τ.equivariant (σ m) g (mfderiv IB (IB.prod IG) σ m v),
+    mfderiv_action_at_g (σ m) g γ, τ.reproduces_fundamental]
+  try rfl
+
+/-- The transformation law for Yang-Mills fields: the corollary of `connectionForm_localTriv`
+obtained by pulling back along `m ↦ (m, Ω m)`, since `σ₂ = h ∘ (id, Ω)`. -/
 theorem yangMills_transformation
     (τ : ConnectionForm (G := G) (IG := IG) (IB := IB) (P := P))
     (σ₁ σ₂ : B → P) (U₁ U₂ : Set B)
@@ -176,19 +227,12 @@ theorem yangMills_transformation
             contMDiffAt_gaugeMap σ₁ σ₂ U₁ U₂ hσ₁ hσ₂ Ω hΩ m hm
           have foo : U₁ ∈ nhds m := hσ₁.1.mem_nhds hm.1
           exact mfderiv_smul_section m σ₁ Ω (hσ₁.2.1.contMDiffAt foo) hΩ_smooth v
-    _ = τ.form.toFun (σ₁ m <• Ω m)
-          (mfderiv (IB.prod IG) (IB.prod IG) (· <• Ω m) (σ₁ m) (mfderiv IB (IB.prod IG) σ₁ m v)) +
-        τ.form.toFun (σ₁ m <• Ω m)
-          (mfderiv IG (IB.prod IG) (σ₁ m <• ·) (Ω m) (mfderiv IB IG Ω m v)) := by
-          exact map_add _ _ _
+    -- this is `h^* ω` at `(m, Ω m)` applied to `(v, dΩ v)`; apply Theorem 22.2
     _ = Ad (Ω m)⁻¹ (τ.form.toFun (σ₁ m) (mfderiv IB (IB.prod IG) σ₁ m v)) +
           maurerCartan (Ω m) (mfderiv IB IG Ω m v) := by
-          congr 1
-          · exact τ.equivariant (σ₁ m) (Ω m) (mfderiv IB (IB.prod IG) σ₁ m v)
-          · have hfund : mfderiv IG (IB.prod IG) (σ₁ m <• ·) (Ω m) (mfderiv IB IG Ω m v) =
-                fundamentalVectorField (IB := IB) (IG := IG)
-                  (maurerCartan (Ω m) (mfderiv IB IG Ω m v)) (σ₁ m <• Ω m) :=
-              mfderiv_action_at_g (σ₁ m) (Ω m) (mfderiv IB IG Ω m v)
-            rw [hfund, τ.reproduces_fundamental]
+          have hσ₁' : MDifferentiableAt IB (IB.prod IG) σ₁ m :=
+            (hσ₁.2.1.contMDiffAt (hσ₁.1.mem_nhds hm.1)).mdifferentiableAt (by norm_num)
+          rw [← mfderiv_localTriv_apply σ₁ m (Ω m) hσ₁' v (mfderiv IB IG Ω m v)]
+          exact connectionForm_localTriv τ σ₁ m (Ω m) hσ₁' v (mfderiv IB IG Ω m v)
 
 end
