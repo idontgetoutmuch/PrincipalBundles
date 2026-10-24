@@ -48,17 +48,20 @@ variable
   [BoundarylessManifold IG G]
   {P : Type*}
   [TopologicalSpace P]
-  [ChartedSpace (ModelProd HB HG) P]
-  [IsManifold (IB.prod IG) ∞ P]
+  {EP : Type*} [NormedAddCommGroup EP] [NormedSpace ℝ EP]
+  {HP : Type*} [TopologicalSpace HP]
+  {IP : ModelWithCorners ℝ EP HP}
+  [ChartedSpace HP P]
+  [IsManifold IP ∞ P]
   [MulAction (MulOpposite G) P]
-  [SmoothRightGAction ∞ IG (IB.prod IG) G P]
+  [SmoothRightGAction ∞ IG IP G P]
   {proj : P → B}
 
 instance [LieGroup IG ∞ G] : LieGroup IG (minSmoothness ℝ 3) G :=
   LieGroup.of_le (n := ∞)
     (by simp only [minSmoothness_of_isRCLikeNormedField]; exact ENat.LEInfty.out)
 
-variable [hPB : IsPrincipalBundle IB G IG P (IB.prod IG) proj]
+variable [hPB : IsPrincipalBundle IB G IG P IP proj]
 
 /-- The fundamental vector field `A#` associated to a Lie algebra element `A ∈ 𝔤` and a
 point `p` in the total space of a principal `G`-bundle. -/
@@ -66,10 +69,10 @@ noncomputable def fundamentalVectorField
     [T2Space G] [CompleteSpace EG] [BoundarylessManifold IG G]
     (A : GroupLieAlgebra IG G)
     (p : P) :
-    TangentSpace (IB.prod IG) p :=
+    TangentSpace IP p :=
   haveI : LieGroup IG (minSmoothness ℝ 3) G := LieGroup.of_le (n := ∞)
     (by simp only [minSmoothness_of_isRCLikeNormedField]; exact ENat.LEInfty.out)
-  mfderiv 𝓘(ℝ, ℝ) (IB.prod IG)
+  mfderiv 𝓘(ℝ, ℝ) IP
     (fun t : ℝ ↦ p <• expLie (IG := IG) (t • A))
     (0 : ℝ) 1
 
@@ -80,10 +83,10 @@ noncomputable def Ad (g : G) : GroupLieAlgebra IG G →L[ℝ] GroupLieAlgebra IG
 omit [IsManifold IB ∞ B] in
 lemma fundamentalVectorField_mem_vertical
     (A : GroupLieAlgebra IG G) (p : P) :
-    mfderiv (IB.prod IG) IB (fun p : P ↦ proj p) p
+    mfderiv IP IB (fun p : P ↦ proj p) p
       (fundamentalVectorField A p) = 0 := by
   unfold fundamentalVectorField
-  have h118 : MDifferentiableAt 𝓘(ℝ, ℝ) (IB.prod IG) (fun (t : ℝ) ↦ p <• expLie (t • A)) 0 := by
+  have h118 : MDifferentiableAt 𝓘(ℝ, ℝ) IP (fun (t : ℝ) ↦ p <• expLie (t • A)) 0 := by
     have h1 : ContMDiff 𝓘(ℝ, ℝ) 𝓘(ℝ, EG) ∞ (fun t : ℝ ↦ t • (show EG from A)) :=
       (contDiff_id.smul_const (show EG from A)).contMDiff
     have h1 : ContMDiff 𝓘(ℝ, ℝ) 𝓘(ℝ, EG) (minSmoothness ℝ 2) (fun t : ℝ ↦ t • (show EG from A)) :=
@@ -91,31 +94,31 @@ lemma fundamentalVectorField_mem_vertical
         (by simp only [minSmoothness_of_isRCLikeNormedField]; exact Std.IsPreorder.le_refl 2)
     have h2 : ContMDiff 𝓘(ℝ, ℝ) IG (minSmoothness ℝ 2) (fun t : ℝ ↦ expLie (IG := IG) (t • A)) :=
       contMDiff_expLie.comp h1
-    have h3 : ContMDiff 𝓘(ℝ, ℝ) (IB.prod IG) (minSmoothness ℝ 2)
+    have h3 : ContMDiff 𝓘(ℝ, ℝ) IP (minSmoothness ℝ 2)
         (fun t : ℝ ↦ p <• expLie (IG := IG) (t • A)) := by
-      have hconst : ContMDiff 𝓘(ℝ, ℝ) (IB.prod IG) (minSmoothness ℝ 2)
+      have hconst : ContMDiff 𝓘(ℝ, ℝ) IP (minSmoothness ℝ 2)
           (fun _ : ℝ ↦ p) := contMDiff_const
-      have hprod : ContMDiff 𝓘(ℝ, ℝ) ((IB.prod IG).prod IG) (minSmoothness ℝ 2)
+      have hprod : ContMDiff 𝓘(ℝ, ℝ) (IP.prod IG) (minSmoothness ℝ 2)
           (fun t : ℝ ↦ (p, expLie (IG := IG) (t • A))) :=
         hconst.prodMk h2
-      have hsmul : ContMDiff ((IB.prod IG).prod IG) (IB.prod IG) (minSmoothness ℝ 2)
+      have hsmul : ContMDiff (IP.prod IG) IP (minSmoothness ℝ 2)
         (fun p : P × G => p.1 <• p.2) :=
-        (SmoothRightGAction.smooth_smul (n := ∞) (IG := IG) (IM := IB.prod IG) (G := G)
+        (SmoothRightGAction.smooth_smul (n := ∞) (IG := IG) (IM := IP) (G := G)
           (M := P)).of_le
             (by simp only [minSmoothness_of_isRCLikeNormedField]; exact ENat.LEInfty.out)
       exact hsmul.comp hprod
     exact h3.mdifferentiableAt (by norm_num)
   have heval : (fun (t : ℝ) ↦ p <• expLie (t • A)) 0 = p := by
     simp [expLie_zero]
-  have h121 : MDifferentiableAt (IB.prod IG) IB (fun p : P ↦ proj p)
+  have h121 : MDifferentiableAt IP IB (fun p : P ↦ proj p)
     ((fun (t : ℝ) ↦ p <• expLie (t • A)) 0) := by
     rw [heval]
     exact (hPB.smooth_proj).mdifferentiableAt (by norm_num)
   have hcomp : mfderiv 𝓘(ℝ, ℝ) IB ((fun p : P ↦ proj p) ∘
       fun (t : ℝ) ↦ p <• expLie (t • A)) 0 =
-      (mfderiv (IB.prod IG) IB (fun p : P ↦ proj p)
+      (mfderiv IP IB (fun p : P ↦ proj p)
         ((fun (t : ℝ) ↦ p <• expLie (t • A)) 0)).comp
-          (mfderiv 𝓘(ℝ, ℝ) (IB.prod IG) (fun (t : ℝ) ↦ p <• expLie (t • A)) 0) :=
+          (mfderiv 𝓘(ℝ, ℝ) IP (fun (t : ℝ) ↦ p <• expLie (t • A)) 0) :=
     mfderiv_comp (0 : ℝ) h121 h118
   have hconst : ((fun p : P ↦ proj p) ∘
       fun (t : ℝ) ↦ p <• expLie (t • A)) = fun _ ↦ proj p := by
@@ -127,13 +130,13 @@ lemma fundamentalVectorField_mem_vertical
     exact mfderiv_const
   rw [heval] at hcomp
   rw [hzero] at hcomp
-  have key : (mfderiv (IB.prod IG) IB (fun p : P ↦ proj p) p).comp
-      (mfderiv 𝓘(ℝ, ℝ) (IB.prod IG) (fun t : ℝ ↦ p <• expLie (t • A)) 0) = 0 := by
+  have key : (mfderiv IP IB (fun p : P ↦ proj p) p).comp
+      (mfderiv 𝓘(ℝ, ℝ) IP (fun t : ℝ ↦ p <• expLie (t • A)) 0) = 0 := by
     rw [← hcomp]; exact rfl
-  calc mfderiv (IB.prod IG) IB (fun p : P ↦ proj p) p
-        (mfderiv 𝓘(ℝ, ℝ) (IB.prod IG) (fun t : ℝ ↦ p <• expLie (t • A)) 0 1)
-      = ((mfderiv (IB.prod IG) IB (fun p : P ↦ proj p) p).comp
-          (mfderiv 𝓘(ℝ, ℝ) (IB.prod IG) (fun t : ℝ ↦ p <• expLie (t • A)) 0)) 1 := rfl
+  calc mfderiv IP IB (fun p : P ↦ proj p) p
+        (mfderiv 𝓘(ℝ, ℝ) IP (fun t : ℝ ↦ p <• expLie (t • A)) 0 1)
+      = ((mfderiv IP IB (fun p : P ↦ proj p) p).comp
+          (mfderiv 𝓘(ℝ, ℝ) IP (fun t : ℝ ↦ p <• expLie (t • A)) 0)) 1 := rfl
     _ = 0 := by rw [key]; simp
 
 lemma mfderiv_expLie
@@ -175,18 +178,18 @@ section
 open RightActions
 
 omit [TopologicalSpace B] [ChartedSpace HB B] [IsManifold IB ∞ B]
-     [IsManifold (IB.prod IG) ∞ P] in
+     [IsManifold IP ∞ P] in
 lemma fundamentalVectorField_eq_mfderiv_action (p : P) :
     ∀ (A : GroupLieAlgebra IG G),
-    fundamentalVectorField (IB := IB) (IG := IG) A p =
-    mfderiv IG (IB.prod IG) (fun g : G ↦ p <• g) 1 A := by
+    fundamentalVectorField (IP := IP) (IG := IG) A p =
+    mfderiv IG IP (fun g : G ↦ p <• g) 1 A := by
   intro A
-  have hg : MDifferentiableAt IG (IB.prod IG) (fun g : G ↦ p <• g)
+  have hg : MDifferentiableAt IG IP (fun g : G ↦ p <• g)
       ((fun t : ℝ ↦ expLie (IG := IG) (t • A)) 0) := by
     have h0 : ((fun t : ℝ ↦ expLie (IG := IG) (t • A)) 0) = 1 := by
       simp [zero_smul, expLie_zero]
     rw [h0]
-    have := (SmoothRightGAction.smooth_smul (n := ∞) (IG := IG) (IM := IB.prod IG)
+    have := (SmoothRightGAction.smooth_smul (n := ∞) (IG := IG) (IM := IP)
       (G := G) (M := P))
     exact (this.comp (contMDiff_const.prodMk contMDiff_id)).mdifferentiableAt (by norm_num)
   have hf : MDifferentiableAt 𝓘(ℝ, ℝ) IG (fun t : ℝ ↦ expLie (IG := IG) (t • A)) 0 := by
@@ -196,16 +199,16 @@ lemma fundamentalVectorField_eq_mfderiv_action (p : P) :
     have h2 : ContMDiff 𝓘(ℝ, ℝ) IG (minSmoothness ℝ 2) (fun t : ℝ ↦ expLie (IG := IG) (t • A)) :=
       contMDiff_expLie.comp h1
     exact h2.mdifferentiableAt (by norm_num)
-  have hh : mfderiv 𝓘(ℝ, ℝ) (IB.prod IG)
+  have hh : mfderiv 𝓘(ℝ, ℝ) IP
         ((fun g : G ↦ p <• g) ∘ (fun t : ℝ ↦ expLie (IG := IG) (t • A))) 0 =
-      (mfderiv IG (IB.prod IG) (fun g : G ↦ p <• g)
+      (mfderiv IG IP (fun g : G ↦ p <• g)
         ((fun t : ℝ ↦ expLie (IG := IG) (t • A)) 0)).comp
         (mfderiv 𝓘(ℝ, ℝ) IG (fun t : ℝ ↦ expLie (IG := IG) (t • A)) 0) :=
     mfderiv_comp 0 hg hf
-  have hkey : mfderiv 𝓘(ℝ, ℝ) (IB.prod IG) (fun t : ℝ ↦ p <• expLie (IG := IG) (t • A)) 0 1 =
-      mfderiv IG (IB.prod IG) (fun g : G ↦ p <• g) 1 A := by
-    have hmfderiv : mfderiv 𝓘(ℝ, ℝ) (IB.prod IG) (fun t : ℝ ↦ p <• expLie (IG := IG) (t • A)) 0 =
-        (mfderiv IG (IB.prod IG) (fun g : G ↦ p <• g) 1).comp
+  have hkey : mfderiv 𝓘(ℝ, ℝ) IP (fun t : ℝ ↦ p <• expLie (IG := IG) (t • A)) 0 1 =
+      mfderiv IG IP (fun g : G ↦ p <• g) 1 A := by
+    have hmfderiv : mfderiv 𝓘(ℝ, ℝ) IP (fun t : ℝ ↦ p <• expLie (IG := IG) (t • A)) 0 =
+        (mfderiv IG IP (fun g : G ↦ p <• g) 1).comp
           (mfderiv 𝓘(ℝ, ℝ) IG (fun t : ℝ ↦ expLie (IG := IG) (t • A)) 0) := by
       have h1 : ((fun (g : G) ↦ p <• g) ∘ fun (t : ℝ) ↦ expLie (IG := IG) (t • A)) =
                (fun (t : ℝ) ↦ p <• expLie (IG := IG) (t • A)) :=
@@ -221,8 +224,8 @@ lemma fundamentalVectorField_eq_mfderiv_action (p : P) :
   exact hkey
 
 noncomputable def fundamentalVectorFieldLinearMap (p : P) :
-    GroupLieAlgebra IG G →ₗ[ℝ] TangentSpace (IB.prod IG) p where
-  toFun A := fundamentalVectorField (IB := IB) (IG := IG) A p
+    GroupLieAlgebra IG G →ₗ[ℝ] TangentSpace IP p where
+  toFun A := fundamentalVectorField (IP := IP) (IG := IG) A p
   map_add' A B := by
     simp only [fundamentalVectorField_eq_mfderiv_action, map_add]
     exact rfl
@@ -231,10 +234,10 @@ noncomputable def fundamentalVectorFieldLinearMap (p : P) :
     exact rfl
 
 set_option backward.isDefEq.respectTransparency false in
-omit [IsManifold (IB.prod IG) ∞ P] in
+omit [IsManifold IP ∞ P] in
 lemma isMIntegralCurve_action_expLie (p : P) (A : GroupLieAlgebra IG G) :
-    IsMIntegralCurve (I := IB.prod IG) (fun t ↦ p <• expLie (IG := IG) (t • A))
-      (fun q : P ↦ fundamentalVectorField (IB := IB) (IG := IG) A q) := by
+    IsMIntegralCurve (I := IP) (fun t ↦ p <• expLie (IG := IG) (t • A))
+      (fun q : P ↦ fundamentalVectorField (IP := IP) (IG := IG) A q) := by
   intro t
   have hflow : (fun s : ℝ ↦ p <• expLie (IG := IG) ((t + s) • A)) =
                (fun s : ℝ ↦ (p <• expLie (IG := IG) (t • A)) <• expLie (IG := IG) (s • A)) := by
@@ -242,12 +245,12 @@ lemma isMIntegralCurve_action_expLie (p : P) (A : GroupLieAlgebra IG G) :
     have : expLie (IG := IG) ((t + s) • A) =
            expLie (IG := IG) (t • A) * expLie (IG := IG) (s • A) := expLie_add A t s
     rw [this, MulOpposite.op_mul, mul_smul]
-  have hderiv : fundamentalVectorField (IB := IB) (IG := IG) A (p <• expLie (IG := IG) (t • A)) =
-      mfderiv 𝓘(ℝ, ℝ) (IB.prod IG) (fun s ↦ p <• expLie (IG := IG) ((t + s) • A)) 0 1 := by
+  have hderiv : fundamentalVectorField (IP := IP) (IG := IG) A (p <• expLie (IG := IG) (t • A)) =
+      mfderiv 𝓘(ℝ, ℝ) IP (fun s ↦ p <• expLie (IG := IG) ((t + s) • A)) 0 1 := by
     rw [hflow]
     rfl
   simp only
-  have hsmooth : ContMDiff 𝓘(ℝ, ℝ) (IB.prod IG) (minSmoothness ℝ 2)
+  have hsmooth : ContMDiff 𝓘(ℝ, ℝ) IP (minSmoothness ℝ 2)
       (fun (t : ℝ) ↦ p <• expLie (IG := IG) (t • A)) := by
     have h1 : ContMDiff 𝓘(ℝ, ℝ) 𝓘(ℝ, EG) (minSmoothness ℝ 2)
         (fun t : ℝ ↦ t • (show EG from A)) :=
@@ -256,11 +259,11 @@ lemma isMIntegralCurve_action_expLie (p : P) (A : GroupLieAlgebra IG G) :
     have h2 : ContMDiff 𝓘(ℝ, ℝ) IG (minSmoothness ℝ 2)
         (fun t : ℝ ↦ expLie (IG := IG) (t • A)) :=
       contMDiff_expLie.comp h1
-    exact ((SmoothRightGAction.smooth_smul (n := ∞) (IG := IG) (IM := IB.prod IG)
+    exact ((SmoothRightGAction.smooth_smul (n := ∞) (IG := IG) (IM := IP)
       (G := G) (M := P)).of_le
         (by simp only [minSmoothness_of_isRCLikeNormedField]; exact ENat.LEInfty.out)).comp
       (contMDiff_const.prodMk h2)
-  have hmdiff : MDifferentiableAt 𝓘(ℝ, ℝ) (IB.prod IG)
+  have hmdiff : MDifferentiableAt 𝓘(ℝ, ℝ) IP
       (fun t ↦ p <• expLie (IG := IG) (t • A)) t :=
     hsmooth.mdifferentiableAt (by norm_num)
   have hderiv2 := hmdiff.hasMFDerivAt
@@ -270,13 +273,13 @@ lemma isMIntegralCurve_action_expLie (p : P) (A : GroupLieAlgebra IG G) :
     ext s; simp only [Function.comp_apply]
   have hshift0 : MDifferentiableAt 𝓘(ℝ, ℝ) 𝓘(ℝ, ℝ) (fun s : ℝ ↦ t + s) 0 :=
     (((hasDerivAt_id (0 : ℝ)).const_add t).hasFDerivAt.hasMFDerivAt).mdifferentiableAt
-  have houter : MDifferentiableAt 𝓘(ℝ, ℝ) (IB.prod IG)
+  have houter : MDifferentiableAt 𝓘(ℝ, ℝ) IP
       (fun u : ℝ ↦ p <• expLie (IG := IG) (u • A)) ((fun s : ℝ ↦ t + s) 0) := by
     rw [show (fun s : ℝ ↦ t + s) 0 = t by simp]; exact hmdiff
   have hcomp := mfderiv_comp (0 : ℝ) houter hshift0
   rw [← hshiftcomp] at hcomp
-  have hval : fundamentalVectorField (IB := IB) (IG := IG) A (p <• expLie (IG := IG) (t • A))
-      = (mfderiv 𝓘(ℝ, ℝ) (IB.prod IG)
+  have hval : fundamentalVectorField (IP := IP) (IG := IG) A (p <• expLie (IG := IG) (t • A))
+      = (mfderiv 𝓘(ℝ, ℝ) IP
           (fun t : ℝ ↦ p <• expLie (IG := IG) (t • A)) t) 1 := by
     rw [hderiv, hcomp]
     simp only [ContinuousLinearMap.comp_apply]
@@ -298,11 +301,11 @@ lemma isMIntegralCurve_action_expLie (p : P) (A : GroupLieAlgebra IG G) :
 -- set_option backward.isDefEq.respectTransparency false in
 omit [TopologicalSpace B] [ChartedSpace HB B] [IsManifold IB ∞ B] in
 lemma contMDiff_fundamentalVectorField (A : GroupLieAlgebra IG G) :
-    ContMDiff (IB.prod IG) (IB.prod IG).tangent (minSmoothness ℝ 1)
-      (fun p : P ↦ (⟨p, fundamentalVectorField (IB := IB) (IG := IG) A p⟩ :
-        TangentBundle (IB.prod IG) P)) := by
-  haveI : IsManifold (IB.prod IG) 1 P := IsManifold.of_le (n := ∞) (by norm_num)
-  have hsmooth : ContMDiff ((IB.prod IG).prod 𝓘(ℝ, ℝ)) (IB.prod IG) (minSmoothness ℝ 2)
+    ContMDiff IP IP.tangent (minSmoothness ℝ 1)
+      (fun p : P ↦ (⟨p, fundamentalVectorField (IP := IP) (IG := IG) A p⟩ :
+        TangentBundle IP P)) := by
+  haveI : IsManifold IP 1 P := IsManifold.of_le (n := ∞) (by norm_num)
+  have hsmooth : ContMDiff (IP.prod 𝓘(ℝ, ℝ)) IP (minSmoothness ℝ 2)
       (fun (q : P × ℝ) ↦ q.1 <• expLie (IG := IG) (q.2 • A)) := by
     have h1 : ContMDiff 𝓘(ℝ, ℝ) 𝓘(ℝ, EG) (minSmoothness ℝ 2)
         (fun t : ℝ ↦ t • (show EG from A)) :=
@@ -311,14 +314,14 @@ lemma contMDiff_fundamentalVectorField (A : GroupLieAlgebra IG G) :
     have h2 : ContMDiff 𝓘(ℝ, ℝ) IG (minSmoothness ℝ 2)
         (fun t : ℝ ↦ expLie (IG := IG) (t • A)) :=
       contMDiff_expLie.comp h1
-    exact ((SmoothRightGAction.smooth_smul (n := ∞) (IG := IG) (IM := IB.prod IG)
+    exact ((SmoothRightGAction.smooth_smul (n := ∞) (IG := IG) (IM := IP)
       (G := G) (M := P)).of_le
         (by simp only [minSmoothness_of_isRCLikeNormedField]; exact ENat.LEInfty.out)).comp
-      (contMDiff_fst.prodMk (h2.comp (contMDiff_snd (I := IB.prod IG) (J := 𝓘(ℝ, ℝ)))))
+      (contMDiff_fst.prodMk (h2.comp (contMDiff_snd (I := IP) (J := 𝓘(ℝ, ℝ)))))
   intro q
   have hq := ContMDiffAt.mfderiv
     (N := P) (M := ℝ) (M' := P)
-    (J := IB.prod IG) (I := 𝓘(ℝ, ℝ)) (I' := IB.prod IG)
+    (J := IP) (I := 𝓘(ℝ, ℝ)) (I' := IP)
     (m := minSmoothness ℝ 1) (n := minSmoothness ℝ 2) (x₀ := q)
     (fun p t ↦ p <• expLie (IG := IG) (t • A))
     (fun _ ↦ (0 : ℝ))
@@ -338,17 +341,17 @@ lemma contMDiff_fundamentalVectorField (A : GroupLieAlgebra IG G) :
   rw [hg0] at hq
   rw [contMDiffAt_section q]
   apply ContMDiffAt.congr_of_eventuallyEq (hq.clm_apply (contMDiffAt_const (c := (1 : ℝ))))
-  filter_upwards [(chartAt (ModelProd HB HG) q).open_source.mem_nhds
-    (mem_chart_source (ModelProd HB HG) q)] with x hx
+  filter_upwards [(chartAt (HP) q).open_source.mem_nhds
+    (mem_chart_source (HP) q)] with x hx
   simp only [TangentBundle.trivializationAt_apply, fundamentalVectorField]
   simp only [OpenPartialHomeomorph.extend, PartialEquiv.coe_trans,
     ModelWithCorners.toPartialEquiv_coe,
     OpenPartialHomeomorph.toFun_eq_coe, PartialEquiv.coe_trans_symm,
     OpenPartialHomeomorph.coe_coe_symm,
     ModelWithCorners.toPartialEquiv_coe_symm, Function.comp_apply]
-  have hrw := inTangentCoordinates_eq (I := 𝓘(ℝ, ℝ)) (I' := IB.prod IG)
+  have hrw := inTangentCoordinates_eq (I := 𝓘(ℝ, ℝ)) (I' := IP)
     (f := fun x ↦ (0 : ℝ)) (g := fun x ↦ x)
-    (ϕ := fun x ↦ (mfderiv 𝓘(ℝ, ℝ) (IB.prod IG)
+    (ϕ := fun x ↦ (mfderiv 𝓘(ℝ, ℝ) IP
       (fun (t : ℝ) ↦ x <• expLie (IG := IG) (t • A)) 0))
     (hx := ChartedSpace.mem_chart_source (0 : ℝ))
     (hy := hx)
@@ -376,25 +379,25 @@ section
 open RightActions
 variable
   [T2Space P]
-  [BoundarylessManifold (IB.prod IG) P]
+  [BoundarylessManifold IP P]
 
 omit [IsManifold IB ∞ B] in
 lemma fundamentalVectorField_zero_iff
-    [hPB : IsPrincipalBundle IB G IG P (IB.prod IG) proj]
+    [hPB : IsPrincipalBundle IB G IG P IP proj]
     (p : P) (A : GroupLieAlgebra IG G) :
-    fundamentalVectorField (IB := IB) (IG := IG) A p = 0 → A = 0 := by
+    fundamentalVectorField (IP := IP) (IG := IG) A p = 0 → A = 0 := by
   intro h
   have hconst : ∀ (t : ℝ), p <• expLie (IG := IG) (t • A) = p := by
-    have hcurve : IsMIntegralCurve (I := IB.prod IG) (fun t ↦ p <• expLie (IG := IG) (t • A))
-        (fun q : P ↦ fundamentalVectorField (IB := IB) (IG := IG) A q) :=
+    have hcurve : IsMIntegralCurve (I := IP) (fun t ↦ p <• expLie (IG := IG) (t • A))
+        (fun q : P ↦ fundamentalVectorField (IP := IP) (IG := IG) A q) :=
       isMIntegralCurve_action_expLie p A
-    have hconstcurve : IsMIntegralCurve (I := IB.prod IG) (fun _ : ℝ ↦ p)
-        (fun q : P ↦ fundamentalVectorField (IB := IB) (IG := IG) A q) :=
+    have hconstcurve : IsMIntegralCurve (I := IP) (fun _ : ℝ ↦ p)
+        (fun q : P ↦ fundamentalVectorField (IP := IP) (IG := IG) A q) :=
       isMIntegralCurve_const h
     have heq : (fun (t : ℝ) ↦ p <• expLie (IG := IG) (t • A)) = (fun _ ↦ p) := by
       apply isMIntegralCurve_eq_of_contMDiff (t₀ := 0)
-          (fun _ ↦ BoundarylessManifold.isInteriorPoint (I := IB.prod IG))
-      · exact (contMDiff_fundamentalVectorField (IB := IB) (IG := IG) A).of_le (by norm_num)
+          (fun _ ↦ BoundarylessManifold.isInteriorPoint (I := IP))
+      · exact (contMDiff_fundamentalVectorField (IP := IP) (IG := IG) A).of_le (by norm_num)
       · exact hcurve
       · exact hconstcurve
       · simp [expLie_zero]
@@ -421,10 +424,10 @@ noncomputable def maurerCartan (g : G) : TangentSpace IG g →L[ℝ] GroupLieAlg
   mfderiv IG IG (fun h ↦ g⁻¹ * h) g
 
 omit [TopologicalSpace B] [ChartedSpace HB B] [IsManifold IB ∞ B]
-     [IsManifold (IB.prod IG) ∞ P] in
+     [IsManifold IP ∞ P] in
 lemma mfderiv_action_at_g (p : P) (g : G) (w : TangentSpace IG g) :
-    mfderiv IG (IB.prod IG) (p <• ·) g w =
-      fundamentalVectorField (IB := IB) (IG := IG) (maurerCartan g w) (p <• g) := by
+    mfderiv IG IP (p <• ·) g w =
+      fundamentalVectorField (IP := IP) (IG := IG) (maurerCartan g w) (p <• g) := by
   rw [fundamentalVectorField_eq_mfderiv_action]
   have hdecomp : (fun g' : G ↦ p <• g') = (fun h : G ↦ (p <• g) <• h) ∘ (fun g' ↦ g⁻¹ * g') := by
     calc (fun g' : G ↦ p <• g') = (fun g' : G ↦ p <• (g * (g⁻¹ * g'))) := by
@@ -436,18 +439,18 @@ lemma mfderiv_action_at_g (p : P) (g : G) (w : TangentSpace IG g) :
       _ = (fun h : G ↦ (p <• g) <• h) ∘ (fun g' ↦ g⁻¹ * g') := rfl
   have hLG : MDifferentiableAt IG IG (fun g' ↦ g⁻¹ * g') g :=
     (contMDiff_mul_left (a := g⁻¹) (n := ∞)).mdifferentiableAt (by norm_num)
-  have hact : MDifferentiableAt IG (IB.prod IG) (fun h : G ↦ (p <• g) <• h) 1 :=
-    ((SmoothRightGAction.smooth_smul (n := ∞) (IG := IG) (IM := IB.prod IG)
+  have hact : MDifferentiableAt IG IP (fun h : G ↦ (p <• g) <• h) 1 :=
+    ((SmoothRightGAction.smooth_smul (n := ∞) (IG := IG) (IM := IP)
       (G := G) (M := P)).comp
       (contMDiff_const.prodMk contMDiff_id)).mdifferentiableAt (by norm_num)
   have hmC : mfderiv IG IG (fun g' ↦ g⁻¹ * g') g = maurerCartan g := rfl
   conv_lhs => rw [hdecomp]
-  have hact' : MDifferentiableAt IG (IB.prod IG) (fun h : G ↦ (p <• g) <• h) (g⁻¹ * g) := by
+  have hact' : MDifferentiableAt IG IP (fun h : G ↦ (p <• g) <• h) (g⁻¹ * g) := by
     rw [inv_mul_cancel]
     exact hact
   rw [mfderiv_comp g hact' hLG, hmC]
   rw [inv_mul_cancel]
-  haveI : Module ℝ (TangentSpace (IB.prod IG) (p <• g)) := inferInstance
+  haveI : Module ℝ (TangentSpace IP (p <• g)) := inferInstance
   exact rfl
 
 end

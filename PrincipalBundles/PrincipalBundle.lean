@@ -15,7 +15,10 @@ A smooth principal G-bundle over a manifold B is a smooth manifold P equipped wi
 2. A smooth projection `proj : P → B` that is G-invariant
 3. G-equivariant local trivializations
 
-This file develops the abstract theory for an arbitrary total space `P`.
+This file develops the abstract theory for an arbitrary total space `P`. The total space is
+charted by its own model `IP`, which need not be the product `IB.prod IG` of the base and group
+models: the frame bundle uses `IB.prod IG`, while for example the Hopf bundle `S³ → S²` can use
+Mathlib's stereographic charts on `S³`.
 
 Transitivity of the G-action on fibers is a consequence of equivariance and is proved
 as a separate proposition. Gauge transition maps between local sections are shown to be
@@ -60,10 +63,13 @@ variable
   [BoundarylessManifold IG G]
   {P : Type*}
   [TopologicalSpace P]
-  [ChartedSpace (ModelProd HB HG) P]
-  [IsManifold (IB.prod IG) ∞ P]
+  {EP : Type*} [NormedAddCommGroup EP] [NormedSpace ℝ EP]
+  {HP : Type*} [TopologicalSpace HP]
+  {IP : ModelWithCorners ℝ EP HP}
+  [ChartedSpace HP P]
+  [IsManifold IP ∞ P]
   [MulAction (MulOpposite G) P]
-  [SmoothRightGAction ∞ IG (IB.prod IG) G P]
+  [SmoothRightGAction ∞ IG IP G P]
   {proj : P → B}
 
 class IsPrincipalBundle
@@ -95,11 +101,11 @@ class IsPrincipalBundle
   smooth_localTriv : ∀ p : P,
     ContMDiffOn IP (IB.prod IG) ∞ (localTriv p) (localTriv p).source
 
-variable [hPB : IsPrincipalBundle IB G IG P (IB.prod IG) proj]
+variable [hPB : IsPrincipalBundle IB G IG P IP proj]
 
 omit [IsManifold IB ∞ B] [T2Space G] [CompleteSpace EG] [BoundarylessManifold IG G] in
 theorem IsPrincipalBundle.is_transitive
-    [hPB : IsPrincipalBundle IB G IG P (IB.prod IG) proj]
+    [hPB : IsPrincipalBundle IB G IG P IP proj]
     (b : B) (p q : P)
     (hp : proj p = b) (hq : proj q = b) :
     q ∈ MulAction.orbit (MulOpposite G) p := by
@@ -121,24 +127,26 @@ theorem IsPrincipalBundle.is_transitive
 
 def IsLocalSection (σ : B → P) (U : Set B) : Prop :=
   IsOpen U ∧
-  ContMDiffOn IB (IB.prod IG) ∞ σ U ∧
+  ContMDiffOn IB IP ∞ σ U ∧
   ∀ m ∈ U, proj (σ m) = m
 
 omit [IsManifold IB ∞ B]
      [T2Space G]
      [CompleteSpace EG]
      [BoundarylessManifold IG G] in
+-- `IG` no longer occurs in the statement, so `hPB` must be included by hand.
+include hPB in
 lemma gaugeMap_exists
     (σ₁ σ₂ : B → P)
     (U₁ U₂ : Set B)
-    (hσ₁ : IsLocalSection (IB := IB) (IG := IG) (proj := proj) σ₁ U₁)
-    (hσ₂ : IsLocalSection (IB := IB) (IG := IG) (proj := proj) σ₂ U₂)
+    (hσ₁ : IsLocalSection (IB := IB) (IP := IP) (proj := proj) σ₁ U₁)
+    (hσ₂ : IsLocalSection (IB := IB) (IP := IP) (proj := proj) σ₂ U₂)
     (m : B) (hm : m ∈ U₁ ∩ U₂) :
     ∃ g : G, σ₂ m = σ₁ m <• g := by
   have h1 : proj (σ₁ m) = m := hσ₁.2.2 m hm.1
   have h2 : proj (σ₂ m) = m := hσ₂.2.2 m hm.2
   have hmem : σ₂ m ∈ MulAction.orbit (MulOpposite G) (σ₁ m) :=
-    IsPrincipalBundle.is_transitive (IB := IB) (IG := IG) (P := P) m (σ₁ m) (σ₂ m) h1 h2
+    IsPrincipalBundle.is_transitive (IB := IB) (IG := IG) (IP := IP) (P := P) m (σ₁ m) (σ₂ m) h1 h2
   rw [MulAction.mem_orbit_iff] at hmem
   obtain ⟨g, hg⟩ := hmem
   exact ⟨MulOpposite.unop g, by rw [← hg]; simp [HSMul.hSMul]⟩
@@ -146,7 +154,7 @@ lemma gaugeMap_exists
 set_option linter.unusedSectionVars false in
 omit [IsManifold IB ∞ B] [T2Space G] [CompleteSpace EG] [BoundarylessManifold IG G] in
 lemma gaugeMap_unique
-    [hPB : IsPrincipalBundle IB G IG P (IB.prod IG) proj]
+    [hPB : IsPrincipalBundle IB G IG P IP proj]
     (σ₁ σ₂ : B → P)
     (m : B) (g h : G)
     (hg : σ₁ m <• g = σ₂ m)
@@ -181,16 +189,19 @@ theorem contMDiffAt_gaugeMap
     [BoundarylessManifold IG G]
     {P : Type*}
     [TopologicalSpace P]
-    [ChartedSpace (ModelProd HB HG) P]
-    [IsManifold (IB.prod IG) ∞ P]
+    {EP : Type*} [NormedAddCommGroup EP] [NormedSpace ℝ EP]
+    {HP : Type*} [TopologicalSpace HP]
+    {IP : ModelWithCorners ℝ EP HP}
+    [ChartedSpace HP P]
+    [IsManifold IP ∞ P]
     [MulAction (MulOpposite G) P]
-    [SmoothRightGAction ∞ IG (IB.prod IG) G P]
+    [SmoothRightGAction ∞ IG IP G P]
     {proj : P → B}
-    [hPB : IsPrincipalBundle IB G IG P (IB.prod IG) proj]
+    [hPB : IsPrincipalBundle IB G IG P IP proj]
     (σ₁ σ₂ : B → P)
     (U₁ U₂ : Set B)
-    (hσ₁ : IsLocalSection (IB := IB) (IG := IG) (proj := proj) σ₁ U₁)
-    (hσ₂ : IsLocalSection (IB := IB) (IG := IG) (proj := proj) σ₂ U₂)
+    (hσ₁ : IsLocalSection (IB := IB) (IP := IP) (proj := proj) σ₁ U₁)
+    (hσ₂ : IsLocalSection (IB := IB) (IP := IP) (proj := proj) σ₂ U₂)
     (Ω : B → G)
     (hΩ : ∀ x ∈ U₁ ∩ U₂, σ₁ x <• Ω x = σ₂ x)
     (m : B) (hm : m ∈ U₁ ∩ U₂) :
@@ -214,9 +225,9 @@ theorem contMDiffAt_gaugeMap
     have h2 : (φ (σ₂ x)).2 = (φ (σ₁ x)).2 * Ω x := by rw [h]
     rw [h2, inv_mul_cancel_left]
   -- smoothness of the right-hand side
-  have hσ₁m : ContMDiffAt IB (IB.prod IG) ∞ σ₁ m :=
+  have hσ₁m : ContMDiffAt IB IP ∞ σ₁ m :=
     hσ₁.2.1.contMDiffAt (hσ₁.1.mem_nhds hm.1)
-  have hσ₂m : ContMDiffAt IB (IB.prod IG) ∞ σ₂ m :=
+  have hσ₂m : ContMDiffAt IB IP ∞ σ₂ m :=
     hσ₂.2.1.contMDiffAt (hσ₂.1.mem_nhds hm.2)
   have hφ₁ : ContMDiffAt IB (IB.prod IG) ∞ (fun x ↦ φ (σ₁ x)) m :=
     ((hPB.smooth_localTriv (σ₁ m)).contMDiffAt

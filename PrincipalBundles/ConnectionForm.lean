@@ -53,13 +53,16 @@ variable
   [BoundarylessManifold IG G]
   {P : Type*}
   [TopologicalSpace P]
-  [ChartedSpace (ModelProd HB HG) P]
-  [IsManifold (IB.prod IG) ∞ P]
+  {EP : Type*} [NormedAddCommGroup EP] [NormedSpace ℝ EP]
+  {HP : Type*} [TopologicalSpace HP]
+  {IP : ModelWithCorners ℝ EP HP}
+  [ChartedSpace HP P]
+  [IsManifold IP ∞ P]
   [MulAction (MulOpposite G) P]
-  [SmoothRightGAction ∞ IG (IB.prod IG) G P]
+  [SmoothRightGAction ∞ IG IP G P]
   {proj : P → B}
 
-variable [hPB : IsPrincipalBundle IB G IG P (IB.prod IG) proj]
+variable [hPB : IsPrincipalBundle IB G IG P IP proj]
 
 attribute [-instance] Bundle.ContinuousLinearMap.topologicalSpaceTotalSpace
   Bundle.ContinuousLinearMap.fiberBundle
@@ -67,12 +70,12 @@ attribute [-instance] Bundle.ContinuousLinearMap.topologicalSpaceTotalSpace
 def LieAlgebraValuedOneForm :=
   letI : NormedAddCommGroup (GroupLieAlgebra IG G) := inferInstanceAs (NormedAddCommGroup EG)
   letI : NormedSpace ℝ (GroupLieAlgebra IG G) := inferInstanceAs (NormedSpace ℝ EG)
-  letI : NormedAddCommGroup ((EB × EG) →L[ℝ] GroupLieAlgebra IG G) :=
-    inferInstanceAs (NormedAddCommGroup ((EB × EG) →L[ℝ] EG))
-  letI : NormedSpace ℝ ((EB × EG) →L[ℝ] GroupLieAlgebra IG G) :=
-    inferInstanceAs (NormedSpace ℝ ((EB × EG) →L[ℝ] EG))
-  Cₛ^∞⟮IB.prod IG; (EB × EG) →L[ℝ] GroupLieAlgebra IG G,
-    Bundle.Trivial P ((EB × EG) →L[ℝ] GroupLieAlgebra IG G)⟯
+  letI : NormedAddCommGroup (EP →L[ℝ] GroupLieAlgebra IG G) :=
+    inferInstanceAs (NormedAddCommGroup (EP →L[ℝ] EG))
+  letI : NormedSpace ℝ (EP →L[ℝ] GroupLieAlgebra IG G) :=
+    inferInstanceAs (NormedSpace ℝ (EP →L[ℝ] EG))
+  Cₛ^∞⟮IP; EP →L[ℝ] GroupLieAlgebra IG G,
+    Bundle.Trivial P (EP →L[ℝ] GroupLieAlgebra IG G)⟯
 
 section
 set_option backward.isDefEq.respectTransparency false
@@ -86,21 +89,21 @@ local instance : NormedAddCommGroup (GroupLieAlgebra IG G) :=
   inferInstanceAs (NormedAddCommGroup EG)
 local instance : NormedSpace ℝ (GroupLieAlgebra IG G) :=
   inferInstanceAs (NormedSpace ℝ EG)
-local instance : SeminormedAddCommGroup ((EB × EG) →L[ℝ] GroupLieAlgebra IG G) :=
-  inferInstanceAs (SeminormedAddCommGroup ((EB × EG) →L[ℝ] EG))
-local instance : NormedAddCommGroup ((EB × EG) →L[ℝ] GroupLieAlgebra IG G) :=
-  inferInstanceAs (NormedAddCommGroup ((EB × EG) →L[ℝ] EG))
-local instance : NormedSpace ℝ ((EB × EG) →L[ℝ] GroupLieAlgebra IG G) :=
-  inferInstanceAs (NormedSpace ℝ ((EB × EG) →L[ℝ] EG))
+local instance : SeminormedAddCommGroup (EP →L[ℝ] GroupLieAlgebra IG G) :=
+  inferInstanceAs (SeminormedAddCommGroup (EP →L[ℝ] EG))
+local instance : NormedAddCommGroup (EP →L[ℝ] GroupLieAlgebra IG G) :=
+  inferInstanceAs (NormedAddCommGroup (EP →L[ℝ] EG))
+local instance : NormedSpace ℝ (EP →L[ℝ] GroupLieAlgebra IG G) :=
+  inferInstanceAs (NormedSpace ℝ (EP →L[ℝ] EG))
 
 structure ConnectionForm where
-  form : LieAlgebraValuedOneForm (G := G) (IG := IG) (IB := IB) (P := P)
+  form : LieAlgebraValuedOneForm (G := G) (IG := IG) (IP := IP) (P := P)
   reproduces_fundamental :
     ∀ (p : P) (A : GroupLieAlgebra IG G),
-    form.toFun p (fundamentalVectorField (IB := IB) (IG := IG) A p) = A
+    form.toFun p (fundamentalVectorField (IP := IP) (IG := IG) A p) = A
   equivariant :
-    ∀ (p : P) (g : G) (v : TangentSpace (IB.prod IG) p),
-    form.toFun (p <• g) (mfderiv (IB.prod IG) (IB.prod IG) (· <• g) p v) =
+    ∀ (p : P) (g : G) (v : TangentSpace IP p),
+    form.toFun (p <• g) (mfderiv IP IP (· <• g) p v) =
       Ad g⁻¹ (form.toFun p v)
 
 end

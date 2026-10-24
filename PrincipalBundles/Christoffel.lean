@@ -150,7 +150,7 @@ theorem coordFrame_smul_coordGauge (b₁ b₂ m : M)
 
 /-- A coordinate frame is a local section of the frame bundle over its chart domain. -/
 theorem isLocalSection_coordFrame (b : M) :
-    IsLocalSection (IB := I) (IG := modelWithCornersSelf ℝ (E →L[ℝ] E))
+    IsLocalSection (IB := I) (IP := I.prod (modelWithCornersSelf ℝ (E →L[ℝ] E)))
       (proj := frameBundleProj) (coordFrame I b) (chartAt H b).source := by
   refine ⟨(chartAt H b).open_source, ?_, fun m _ => rfl⟩
   intro m₀ hm₀
@@ -250,11 +250,11 @@ theorem christoffel_transformation
     [SmoothRightGAction ∞ (modelWithCornersSelf ℝ (E →L[ℝ] E))
       (I.prod (modelWithCornersSelf ℝ (E →L[ℝ] E))) (E →L[ℝ] E)ˣ ↑(FrameBundle I M)]
     (τ : ConnectionForm (G := (E →L[ℝ] E)ˣ) (IG := modelWithCornersSelf ℝ (E →L[ℝ] E))
-      (IB := I) (P := ↑(FrameBundle I M)))
+      (IP := I.prod (modelWithCornersSelf ℝ (E →L[ℝ] E))) (P := ↑(FrameBundle I M)))
     (b₁ b₂ m : M) (hm : m ∈ (chartAt H b₁).source ∩ (chartAt H b₂).source)
     (v : TangentSpace I m) :
-    yangMillsField τ (coordFrame I b₂) m v =
-      (coordGauge I b₁ b₂ m)⁻¹.val ∘L (yangMillsField τ (coordFrame I b₁) m v) ∘L
+    yangMillsField (IB := I) τ (coordFrame I b₂) m v =
+      (coordGauge I b₁ b₂ m)⁻¹.val ∘L (yangMillsField (IB := I) τ (coordFrame I b₁) m v) ∘L
         (coordGauge I b₁ b₂ m).val +
       (coordGauge I b₁ b₂ m)⁻¹.val ∘L
         (mfderiv I (modelWithCornersSelf ℝ (E →L[ℝ] E)) (coordGauge I b₁ b₂) m v) :=
@@ -361,12 +361,12 @@ theorem christoffel_transformation_chart
     [SmoothRightGAction ∞ (modelWithCornersSelf ℝ (E →L[ℝ] E))
       (I.prod (modelWithCornersSelf ℝ (E →L[ℝ] E))) (E →L[ℝ] E)ˣ ↑(FrameBundle I M)]
     (τ : ConnectionForm (G := (E →L[ℝ] E)ˣ) (IG := modelWithCornersSelf ℝ (E →L[ℝ] E))
-      (IB := I) (P := ↑(FrameBundle I M)))
+      (IP := I.prod (modelWithCornersSelf ℝ (E →L[ℝ] E))) (P := ↑(FrameBundle I M)))
     (b₁ b₂ m : M) (hm : m ∈ (chartAt H b₁).source ∩ (chartAt H b₂).source)
     (v : TangentSpace I m) :
-    yangMillsField τ (coordFrame I b₂) m v =
+    yangMillsField (IB := I) τ (coordFrame I b₂) m v =
       fderiv ℝ (extChartAt I b₂ ∘ (extChartAt I b₁).symm) (extChartAt I b₁ m) ∘L
-        (yangMillsField τ (coordFrame I b₁) m v) ∘L
+        (yangMillsField (IB := I) τ (coordFrame I b₁) m v) ∘L
         fderiv ℝ (extChartAt I b₁ ∘ (extChartAt I b₂).symm) (extChartAt I b₂ m) +
       fderiv ℝ (extChartAt I b₂ ∘ (extChartAt I b₁).symm) (extChartAt I b₁ m) ∘L
         fderiv ℝ (fderiv ℝ (extChartAt I b₁ ∘ (extChartAt I b₂).symm)) (extChartAt I b₂ m)
@@ -454,17 +454,19 @@ matrix-valued 1-form. -/
 def christoffelForm
     (τ : ConnectionForm (G := ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ))ˣ)
       (IG := modelWithCornersSelf ℝ ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ)))
-      (IB := 𝓘(ℝ, Fin n → ℝ)) (P := ↑(FrameBundle 𝓘(ℝ, Fin n → ℝ) M)))
+      (IP := (𝓘(ℝ, Fin n → ℝ)).prod (modelWithCornersSelf ℝ ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ))))
+      (P := ↑(FrameBundle 𝓘(ℝ, Fin n → ℝ) M)))
     (b m : M) :
     TangentSpace 𝓘(ℝ, Fin n → ℝ) m →L[ℝ] ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ)) :=
   @id (TangentSpace 𝓘(ℝ, Fin n → ℝ) m →L[ℝ] ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ)))
-    (yangMillsField τ (coordFrame 𝓘(ℝ, Fin n → ℝ) b) m)
+    (yangMillsField (IB := 𝓘(ℝ, Fin n → ℝ)) τ (coordFrame 𝓘(ℝ, Fin n → ℝ) b) m)
 
 /-- The Christoffel symbol `Γᵏₗμ` of the chart at `b`, at `m`. -/
 def christoffel
     (τ : ConnectionForm (G := ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ))ˣ)
       (IG := modelWithCornersSelf ℝ ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ)))
-      (IB := 𝓘(ℝ, Fin n → ℝ)) (P := ↑(FrameBundle 𝓘(ℝ, Fin n → ℝ) M)))
+      (IP := (𝓘(ℝ, Fin n → ℝ)).prod (modelWithCornersSelf ℝ ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ))))
+      (P := ↑(FrameBundle 𝓘(ℝ, Fin n → ℝ) M)))
     (b m : M) (k l μ : Fin n) : ℝ :=
   christoffelForm τ b m (coordVec b m μ) (stdVec l) k
 
@@ -476,7 +478,8 @@ With `x` the chart at `b₁` and `y` the chart at `b₂`,
 theorem christoffel_components
     (τ : ConnectionForm (G := ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ))ˣ)
       (IG := modelWithCornersSelf ℝ ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ)))
-      (IB := 𝓘(ℝ, Fin n → ℝ)) (P := ↑(FrameBundle 𝓘(ℝ, Fin n → ℝ) M)))
+      (IP := (𝓘(ℝ, Fin n → ℝ)).prod (modelWithCornersSelf ℝ ((Fin n → ℝ) →L[ℝ] (Fin n → ℝ))))
+      (P := ↑(FrameBundle 𝓘(ℝ, Fin n → ℝ) M)))
     (b₁ b₂ m : M)
     (hm : m ∈ (chartAt (Fin n → ℝ) b₁).source ∩ (chartAt (Fin n → ℝ) b₂).source)
     (i j ν : Fin n) :

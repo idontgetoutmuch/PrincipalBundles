@@ -619,19 +619,20 @@ theorem frameBundleYangMills_transformation
     [SmoothRightGAction ∞ (modelWithCornersSelf ℝ (E →L[ℝ] E))
       (I.prod (modelWithCornersSelf ℝ (E →L[ℝ] E))) (E →L[ℝ] E)ˣ ↑(FrameBundle I M)]
     (τ : ConnectionForm (G := (E →L[ℝ] E)ˣ) (IG := modelWithCornersSelf ℝ (E →L[ℝ] E))
-      (IB := I) (P := ↑(FrameBundle I M)))
+      (IP := I.prod (modelWithCornersSelf ℝ (E →L[ℝ] E))) (P := ↑(FrameBundle I M)))
     (σ₁ σ₂ : M → ↑(FrameBundle I M)) (U₁ U₂ : Set M)
-    (hσ₁ : IsLocalSection (IB := I) (IG := modelWithCornersSelf ℝ (E →L[ℝ] E))
+    (hσ₁ : IsLocalSection (IB := I) (IP := I.prod (modelWithCornersSelf ℝ (E →L[ℝ] E)))
       (proj := frameBundleProj) σ₁ U₁)
-    (hσ₂ : IsLocalSection (IB := I) (IG := modelWithCornersSelf ℝ (E →L[ℝ] E))
+    (hσ₂ : IsLocalSection (IB := I) (IP := I.prod (modelWithCornersSelf ℝ (E →L[ℝ] E)))
       (proj := frameBundleProj) σ₂ U₂)
     (Ω : M → (E →L[ℝ] E)ˣ) (hΩ : ∀ m ∈ U₁ ∩ U₂, σ₁ m <• Ω m = σ₂ m)
     (m : M) (hm : m ∈ U₁ ∩ U₂) (v : TangentSpace I m) :
-    yangMillsField τ σ₂ m v =
-      (Ω m)⁻¹.val ∘L (yangMillsField τ σ₁ m v) ∘L (Ω m).val +
+    yangMillsField (IB := I) τ σ₂ m v =
+      (Ω m)⁻¹.val ∘L (yangMillsField (IB := I) τ σ₁ m v) ∘L (Ω m).val +
       (Ω m)⁻¹.val ∘L (mfderiv I (modelWithCornersSelf ℝ (E →L[ℝ] E)) Ω m v) := by
   rw [yangMills_transformation τ σ₁ σ₂ U₁ U₂ hσ₁ hσ₂ Ω hΩ m hm v,
-    show (Ad (IG := modelWithCornersSelf ℝ (E →L[ℝ] E)) (Ω m)⁻¹) (yangMillsField τ σ₁ m v) = _
+    show (Ad (IG := modelWithCornersSelf ℝ (E →L[ℝ] E)) (Ω m)⁻¹)
+        (yangMillsField (IB := I) τ σ₁ m v) = _
       from Ad_units_eq (Ω m) _,
     show (maurerCartan (IG := modelWithCornersSelf ℝ (E →L[ℝ] E)) (Ω m))
         (mfderiv I (modelWithCornersSelf ℝ (E →L[ℝ] E)) Ω m v) = _
