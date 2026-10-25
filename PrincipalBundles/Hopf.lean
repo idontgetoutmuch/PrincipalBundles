@@ -861,9 +861,9 @@ instance instIsPrincipalBundle :
     intro p q hq g
     unfold localTriv at hq ⊢
     split_ifs with h
-    · rw [if_pos h] at hq
+    · rw [ite_eq_left_of_eq_true _ _ (eq_true h)] at hq
       exact triv₀_smul q ((mem_preimage_baseSet₀ q).mp hq) g
-    · rw [if_neg h] at hq
+    · rw [ite_eq_right_of_eq_false _ _ (eq_false h)] at hq
       exact triv₁_smul q ((mem_preimage_baseSet₁ q).mp hq) g
   smooth_localTriv := by
     intro p

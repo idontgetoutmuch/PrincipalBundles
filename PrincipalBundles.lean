@@ -9,3 +9,4 @@ import PrincipalBundles.UnitsMFDeriv
 import PrincipalBundles.GradedDiffLieAlg
 import PrincipalBundles.FrameBundle
 import PrincipalBundles.Christoffel
+import PrincipalBundles.Hopf
