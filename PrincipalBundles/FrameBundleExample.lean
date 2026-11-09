@@ -151,6 +151,14 @@ instance : TauCeti.PrincipalBundle (E →L[ℝ] E)ˣ (Fibre I M) where
 instance : TauCeti.ContMDiffFiberBundle ∞ (E →L[ℝ] E)ˣ (Fibre I M) I 𝓘(ℝ, E →L[ℝ] E) where
   contMDiffOn_coordChange _ _ _ _ := sorry
 
+/-- **The frame bundle is a smooth principal `GL(E)`-bundle in Tau Ceti's sense.** Both parts are
+`Prop`s about the `FiberBundle` instance above, which is data and so cannot be part of the
+statement. -/
+theorem fibre_isSmoothPrincipalBundle :
+    TauCeti.PrincipalBundle (E →L[ℝ] E)ˣ (Fibre I M) ∧
+      TauCeti.ContMDiffFiberBundle ∞ (E →L[ℝ] E)ˣ (Fibre I M) I 𝓘(ℝ, E →L[ℝ] E) :=
+  ⟨inferInstance, inferInstance⟩
+
 /-!
 The two smooth structures, on `TauCeti.ManifoldTotalSpace` and on the open subset, are modelled
 on the same space. To use results proved on one for the other we need the identification to be
