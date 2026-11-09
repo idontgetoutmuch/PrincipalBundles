@@ -10,3 +10,4 @@ import PrincipalBundles.GradedDiffLieAlg
 import PrincipalBundles.FrameBundle
 import PrincipalBundles.Christoffel
 import PrincipalBundles.Hopf
+import PrincipalBundles.FrameBundleExample

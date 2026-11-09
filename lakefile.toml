@@ -6,7 +6,7 @@ defaultTargets = ["PrincipalBundles"]
 [[require]]
 name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4"
-rev = "3b531c35df33d6bbe64b4e87dec056211d3a5676"
+rev = "1b1ccf4b088b32fa3f23f2de1127433254a81e1e"
 
 # Files copied from Tau Ceti; see TauCeti/VENDORED.md.
 [[lean_lib]]

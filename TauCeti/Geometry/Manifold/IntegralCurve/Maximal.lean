@@ -53,10 +53,21 @@ arbitrary initial time is recovered by translating the parameter with
   interval, and `zero_mem_maximalIntegralCurveInterval` puts `0` in it, uniformly in the initial
   point in `TauCeti.eventually_mem_maximalIntegralCurveInterval`.
 * `isMIntegralCurveOn_maximalIntegralCurve`: the maximal curve is an integral curve of `v` on the
-  maximal interval, with `maximalIntegralCurve_zero` giving its value at `0`.
+  maximal interval, with `maximalIntegralCurve_zero` giving its value at `0`; it is a global
+  integral curve when that interval is all of `ℝ`
+  (`TauCeti.isMIntegralCurve_maximalIntegralCurve_of_eq_univ`).
+* `IsMIntegralCurve.maximalIntegralCurve_eq`: a global integral curve is the maximal integral
+  curve through its initial point.
 * `IsMIntegralCurveOn.eqOn_maximalIntegralCurve` and
   `IsMIntegralCurveOn.subset_maximalIntegralCurveInterval`: every integral curve through `x` on an
-  open interval around `0` is a restriction of the maximal one.
+  open interval around `0` is a restriction of the maximal one. Their `Ioi` forms apply on
+  open forward rays containing `0`.
+* `IsMIntegralCurveOn.eqOn_maximalIntegralCurve_Ici` and
+  `IsMIntegralCurveOn.Ioi_subset_maximalIntegralCurveInterval_of_Ici`: moving the time origin
+  to any interior time compares a prescribed closed-ray curve with the maximal curve, without
+  requiring a two-sided derivative at the endpoint.
+  `IsMIntegralCurveOn.mapsTo_maximalIntegralCurve_Ici` transfers forward trapping sets, and
+  `IsMIntegralCurveOn.tendsto_maximalIntegralCurve_iff` transfers limits at positive infinity.
 * `exists_Ioo_subset_maximalIntegralCurveInterval_of_isLUB` and its `IsGLB` counterpart: a finite
   endpoint of the maximal interval is reached by an open subinterval straddling `0`.
 * `not_mapClusterPt_nhdsLT_maximalIntegralCurve` and
@@ -66,10 +77,12 @@ arbitrary initial time is recovered by translating the parameter with
   `eventually_notMem_nhdsGT_maximalIntegralCurve` the compact-set forms.
 * `maximalIntegralCurveInterval_eq_univ_of_not_bddAbove_not_bddBelow`: an interval of existence
   unbounded on both sides is all of `ℝ`.
+* `Ici_subset_maximalIntegralCurveInterval_of_isCompact_of_mapsTo`: a maximal curve whose
+  forward part is confined to a compact set is defined for all positive time.
 * `maximalIntegralCurveInterval_eq_univ_of_isCompact_of_mapsTo`: a maximal curve confined to a
-  compact set is defined for all time, and `isMIntegralCurve_maximalIntegralCurve` and
-  `maximalIntegralCurveInterval_eq_univ_of_compactSpace` specialize this to a compact manifold:
-  **a `C^1` vector field on a compact manifold is complete**.
+  compact set is defined for all time, and `isMIntegralCurve_maximalIntegralCurve` specializes
+  this to a compact manifold: **a `C^1` vector field on a compact manifold is complete**
+  (stated as `TauCeti.isCompleteVectorField_of_compactSpace`).
 * `maximalIntegralCurveInterval_eq_univ_iff`: the maximal interval is all of `ℝ` exactly when some
   global integral curve passes through `x` at time `0`.
 
@@ -115,6 +128,32 @@ theorem IsMIntegralCurveOn.subset_maximalIntegralCurveInterval
     (hγ : IsMIntegralCurveOn γ v (Ioo a b)) (h0 : (0 : ℝ) ∈ Ioo a b) (hx : γ 0 = x) :
     Ioo a b ⊆ maximalIntegralCurveInterval v x :=
   fun _ ht ↦ ⟨γ, a, b, hγ, hx, h0, ht⟩
+
+/-- A curve on an open forward ray containing zero supplies existence on that whole ray. -/
+theorem IsMIntegralCurveOn.Ioi_subset_maximalIntegralCurveInterval
+    (hγ : IsMIntegralCurveOn γ v (Ioi a)) (ha : a < 0) (hx : γ 0 = x) :
+    Ioi a ⊆ maximalIntegralCurveInterval v x := by
+  intro t ht
+  have hcurve : IsMIntegralCurveOn γ v (Ioo a (max t 0 + 1)) := hγ.mono fun _ h ↦ h.1
+  exact hcurve.subset_maximalIntegralCurveInterval
+    ⟨ha, by linarith [le_max_right t 0]⟩ hx ⟨ht, by linarith [le_max_left t 0]⟩
+
+/-- Translating a curve on a closed forward ray gives an integral curve on the translated
+open ray. -/
+theorem IsMIntegralCurveOn.comp_add_Ioi_sub_of_Ici
+    (hγ : IsMIntegralCurveOn γ v (Ici a)) (b : ℝ) :
+    IsMIntegralCurveOn (γ ∘ (· + b)) v (Ioi (a - b)) :=
+  (hγ.comp_add b).mono fun t ht ↦ by
+    simp only [mem_ofPred_eq, mem_Ici, mem_Ioi] at *
+    linarith
+
+/-- Moving the time origin to an interior time of a closed forward ray supplies existence on
+the corresponding open ray. -/
+theorem IsMIntegralCurveOn.Ioi_subset_maximalIntegralCurveInterval_of_Ici
+    (hγ : IsMIntegralCurveOn γ v (Ici a)) (hb : a < b) :
+    Ioi (a - b) ⊆ maximalIntegralCurveInterval v (γ b) :=
+  (hγ.comp_add_Ioi_sub_of_Ici b).Ioi_subset_maximalIntegralCurveInterval
+    (by linarith) (by simp)
 
 /-- The maximal interval of existence is open. -/
 theorem isOpen_maximalIntegralCurveInterval : IsOpen (maximalIntegralCurveInterval v x) := by
@@ -265,6 +304,57 @@ theorem IsMIntegralCurveOn.eqOn_maximalIntegralCurve
   exact isMIntegralCurveOn_Ioo_eqOn_of_contMDiff_boundaryless h0' hv (hδ.mono hsubδ)
     (hγ.mono hsubγ) (hδx.trans hx.symm) ht'
 
+/-- On an open forward ray containing zero, a prescribed integral curve agrees with the maximal
+curve with the same initial value. -/
+theorem IsMIntegralCurveOn.eqOn_maximalIntegralCurve_Ioi
+    (hγ : IsMIntegralCurveOn γ v (Ioi a))
+    (hv : CMDiff 1 (fun y ↦ (⟨y, v y⟩ : TangentBundle I M)))
+    (ha : a < 0) (hx : γ 0 = x) :
+    EqOn (maximalIntegralCurve v x) γ (Ioi a) := by
+  intro t ht
+  have hcurve : IsMIntegralCurveOn γ v (Ioo a (max t 0 + 1)) := hγ.mono fun _ h ↦ h.1
+  exact hcurve.eqOn_maximalIntegralCurve hv
+    ⟨ha, by linarith [le_max_right t 0]⟩ hx ⟨ht, by linarith [le_max_left t 0]⟩
+
+/-- A prescribed curve on a closed forward ray agrees in its interior with the maximal curve
+through any chosen interior time, after translating the time parameter. -/
+theorem IsMIntegralCurveOn.eqOn_maximalIntegralCurve_Ici
+    (hγ : IsMIntegralCurveOn γ v (Ici a))
+    (hv : CMDiff 1 (fun y ↦ (⟨y, v y⟩ : TangentBundle I M))) (hb : a < b) :
+    EqOn (maximalIntegralCurve v (γ b)) (γ ∘ (· + b)) (Ioi (a - b)) :=
+  (hγ.comp_add_Ioi_sub_of_Ici b).eqOn_maximalIntegralCurve_Ioi hv
+    (by linarith) (by simp)
+
+/-- A set containing a prescribed curve on a closed forward ray also contains the forward
+maximal curve through any of its interior points. -/
+theorem IsMIntegralCurveOn.mapsTo_maximalIntegralCurve_Ici
+    (hγ : IsMIntegralCurveOn γ v (Ici a))
+    (hv : CMDiff 1 (fun y ↦ (⟨y, v y⟩ : TangentBundle I M))) (hb : a < b)
+    {S : Set M} (hmem : MapsTo γ (Ici a) S) :
+    MapsTo (maximalIntegralCurve v (γ b)) (Ici 0) S := by
+  have heq := hγ.eqOn_maximalIntegralCurve_Ici hv hb
+  intro t ht
+  rw [heq (lt_of_lt_of_le (sub_neg.mpr hb) ht)]
+  exact hmem (by simp only [mem_Ici] at *; linarith)
+
+/-- A curve on a closed forward ray has the same limit at positive infinity as the maximal
+curve through any of its interior points. -/
+theorem IsMIntegralCurveOn.tendsto_maximalIntegralCurve_iff
+    (hγ : IsMIntegralCurveOn γ v (Ici a))
+    (hv : CMDiff 1 (fun y ↦ (⟨y, v y⟩ : TangentBundle I M))) (hb : a < b) {p : M} :
+    Tendsto (maximalIntegralCurve v (γ b)) atTop (𝓝 p) ↔ Tendsto γ atTop (𝓝 p) := by
+  have heq := hγ.eqOn_maximalIntegralCurve_Ici hv hb
+  constructor
+  · intro hlim
+    apply (hlim.comp (tendsto_atTop_add_const_right atTop (-b) tendsto_id)).congr'
+    filter_upwards [eventually_gt_atTop a] with t ht
+    simpa only [comp_apply, id_eq, neg_add_cancel_right] using
+      heq (x := t + -b) (by simp only [mem_Ioi]; linarith)
+  · intro hlim
+    apply (hlim.comp (tendsto_atTop_add_const_right atTop b tendsto_id)).congr'
+    filter_upwards [eventually_gt_atTop (a - b)] with t ht
+    exact (heq ht).symm
+
 /-- **The maximal integral curve is an integral curve** of `v` on the maximal interval of
 existence. -/
 theorem isMIntegralCurveOn_maximalIntegralCurve
@@ -274,6 +364,27 @@ theorem isMIntegralCurveOn_maximalIntegralCurve
   rintro t ⟨γ, a, b, hγ, hx, h0, ht⟩
   exact (hγ.congr (hγ.eqOn_maximalIntegralCurve hv h0 hx)).isMIntegralCurveAt
     (Ioo_mem_nhds ht.1 ht.2)
+
+namespace TauCeti
+
+/-- If the maximal interval of existence is all of `ℝ`, the maximal integral curve is a global
+integral curve of `v`. -/
+theorem isMIntegralCurve_maximalIntegralCurve_of_eq_univ
+    (hv : CMDiff 1 (fun y ↦ (⟨y, v y⟩ : TangentBundle I M)))
+    (h : maximalIntegralCurveInterval v x = univ) :
+    IsMIntegralCurve (maximalIntegralCurve v x) v := by
+  rw [isMIntegralCurve_iff_isMIntegralCurveOn, ← h]
+  exact isMIntegralCurveOn_maximalIntegralCurve hv
+
+end TauCeti
+
+/-- **A global integral curve is the maximal integral curve through its initial point.** -/
+theorem IsMIntegralCurve.maximalIntegralCurve_eq
+    (hv : CMDiff 1 (fun y ↦ (⟨y, v y⟩ : TangentBundle I M))) (hγ : IsMIntegralCurve γ v)
+    (t : ℝ) : maximalIntegralCurve v (γ 0) t = γ t := by
+  have habs := abs_nonneg t
+  exact (hγ.isMIntegralCurveOn (Ioo (-(|t| + 1)) (|t| + 1))).eqOn_maximalIntegralCurve hv
+    ⟨by linarith, by linarith⟩ rfl ⟨by linarith [neg_abs_le t], by linarith [le_abs_self t]⟩
 
 /-- **A maximal integral curve has no cluster point at a finite right endpoint.** If the maximal
 interval of existence is bounded above, with least upper bound `b`, then `maximalIntegralCurve v x`
@@ -359,6 +470,24 @@ theorem maximalIntegralCurveInterval_eq_univ_of_not_bddAbove_not_bddBelow
   · obtain ⟨s, hs, hst⟩ := not_bddBelow_iff.mp hlow t
     exact ordConnected_maximalIntegralCurveInterval.out hs h0 ⟨hst.le, h.le⟩
 
+/-- **A maximal integral curve whose forward part is confined to a compact set is defined for all
+positive time.** A finite right endpoint of the maximal interval is impossible, since the escape
+lemma would force the curve out of the compact set just before it. -/
+theorem Ici_subset_maximalIntegralCurveInterval_of_isCompact_of_mapsTo [CompleteSpace E]
+    (hv : CMDiff 1 (fun y ↦ (⟨y, v y⟩ : TangentBundle I M)))
+    (h0 : (0 : ℝ) ∈ maximalIntegralCurveInterval v x) {K : Set M} (hK : IsCompact K)
+    (hmem : MapsTo (maximalIntegralCurve v x) (maximalIntegralCurveInterval v x ∩ Ici 0) K) :
+    Ici 0 ⊆ maximalIntegralCurveInterval v x := by
+  have hup : ¬ BddAbove (maximalIntegralCurveInterval v x) := fun hbdd ↦ by
+    have hlub := isLUB_csSup ⟨0, h0⟩ hbdd
+    obtain ⟨a, ha, hb0, hsub⟩ := exists_Ioo_subset_maximalIntegralCurveInterval_of_isLUB h0 hlub
+    obtain ⟨t, ht, htK⟩ := (Filter.Eventually.and (Ioo_mem_nhdsLT hb0)
+      (eventually_notMem_nhdsLT_maximalIntegralCurve hv h0 hlub hK)).exists
+    exact htK (hmem ⟨hsub ⟨ha.trans ht.1, ht.2⟩, mem_Ici.mpr ht.1.le⟩)
+  intro t ht
+  obtain ⟨s, hs, hts⟩ := not_bddAbove_iff.mp hup t
+  exact ordConnected_maximalIntegralCurveInterval.out h0 hs ⟨ht, hts.le⟩
+
 /-- **A maximal integral curve confined to a compact set is defined for all time.** Neither
 endpoint of the maximal interval can be finite, since the escape lemma would force the curve out of
 the compact set there. -/
@@ -367,24 +496,16 @@ theorem maximalIntegralCurveInterval_eq_univ_of_isCompact_of_mapsTo [CompleteSpa
     (h0 : (0 : ℝ) ∈ maximalIntegralCurveInterval v x) {K : Set M} (hK : IsCompact K)
     (hmem : MapsTo (maximalIntegralCurve v x) (maximalIntegralCurveInterval v x) K) :
     maximalIntegralCurveInterval v x = univ := by
-  have hcontra : ∀ {l : Filter ℝ}, l.NeBot →
-      (∀ᶠ t in l, t ∈ maximalIntegralCurveInterval v x) →
-      (∀ᶠ t in l, maximalIntegralCurve v x t ∉ K) → False := by
-    intro l hl h1 h2
-    obtain ⟨t, ht1, ht2⟩ := (h1.and h2).exists
-    exact ht2 (hmem ht1)
-  have hup : ¬ BddAbove (maximalIntegralCurveInterval v x) := fun hbdd ↦ by
-    have hlub := isLUB_csSup ⟨0, h0⟩ hbdd
-    obtain ⟨a, ha, hb0, hsub⟩ := exists_Ioo_subset_maximalIntegralCurveInterval_of_isLUB h0 hlub
-    exact hcontra inferInstance
-      (mem_of_superset (Ioo_mem_nhdsLT (ha.trans hb0)) hsub)
-      (eventually_notMem_nhdsLT_maximalIntegralCurve hv h0 hlub hK)
+  have hup : ¬ BddAbove (maximalIntegralCurveInterval v x) := fun hbdd ↦ not_bddAbove_Ici 0
+    (hbdd.mono (Ici_subset_maximalIntegralCurveInterval_of_isCompact_of_mapsTo hv h0 hK
+      (hmem.mono_left inter_subset_left)))
   have hlow : ¬ BddBelow (maximalIntegralCurveInterval v x) := fun hbdd ↦ by
     have hglb := isGLB_csInf ⟨0, h0⟩ hbdd
     obtain ⟨b, hb, ha0, hsub⟩ := exists_Ioo_subset_maximalIntegralCurveInterval_of_isGLB h0 hglb
-    exact hcontra inferInstance
+    obtain ⟨t, ht, htK⟩ := (Filter.Eventually.and
       (mem_of_superset (Ioo_mem_nhdsGT (ha0.trans hb)) hsub)
-      (eventually_notMem_nhdsGT_maximalIntegralCurve hv h0 hglb hK)
+      (eventually_notMem_nhdsGT_maximalIntegralCurve hv h0 hglb hK)).exists
+    exact htK (hmem ht)
   exact maximalIntegralCurveInterval_eq_univ_of_not_bddAbove_not_bddBelow h0 hup hlow
 
 /-- **A `C^1` vector field on a compact boundaryless manifold is complete**: its maximal integral
@@ -393,18 +514,9 @@ theorem isMIntegralCurve_maximalIntegralCurve [CompleteSpace E] [CompactSpace M]
     (hv : CMDiff 1 (fun y ↦ (⟨y, v y⟩ : TangentBundle I M))) :
     IsMIntegralCurve (maximalIntegralCurve v x) v := by
   have h0 := zero_mem_maximalIntegralCurveInterval (v := v) (x := x) hv.contMDiffAt
-  rw [isMIntegralCurve_iff_isMIntegralCurveOn,
-    ← maximalIntegralCurveInterval_eq_univ_of_isCompact_of_mapsTo hv h0 isCompact_univ
-      (fun _ _ ↦ mem_univ _)]
-  exact isMIntegralCurveOn_maximalIntegralCurve hv
-
-/-- On a compact boundaryless manifold, the maximal integral curve of a `C^1` vector field through
-any point is defined for all time. -/
-theorem maximalIntegralCurveInterval_eq_univ_of_compactSpace [CompleteSpace E] [CompactSpace M]
-    (hv : CMDiff 1 (fun y ↦ (⟨y, v y⟩ : TangentBundle I M))) :
-    maximalIntegralCurveInterval v x = univ :=
-  maximalIntegralCurveInterval_eq_univ_of_isCompact_of_mapsTo hv
-    (zero_mem_maximalIntegralCurveInterval hv.contMDiffAt) isCompact_univ fun _ _ ↦ mem_univ _
+  exact TauCeti.isMIntegralCurve_maximalIntegralCurve_of_eq_univ hv
+    (maximalIntegralCurveInterval_eq_univ_of_isCompact_of_mapsTo hv h0 isCompact_univ
+      (fun _ _ ↦ mem_univ _))
 
 /-- The maximal interval of existence is all of `ℝ` exactly when a global integral curve of `v`
 passes through `x` at time `0`. This is the form in which completeness of the field at a point is
@@ -414,8 +526,7 @@ theorem maximalIntegralCurveInterval_eq_univ_iff
     maximalIntegralCurveInterval v x = univ ↔ ∃ γ : ℝ → M, γ 0 = x ∧ IsMIntegralCurve γ v := by
   refine ⟨fun h ↦ ⟨maximalIntegralCurve v x, maximalIntegralCurve_zero (h ▸ mem_univ 0), ?_⟩,
     fun ⟨γ, hx, hγ⟩ ↦ eq_univ_of_forall fun t ↦ ?_⟩
-  · rw [isMIntegralCurve_iff_isMIntegralCurveOn, ← h]
-    exact isMIntegralCurveOn_maximalIntegralCurve hv
+  · exact TauCeti.isMIntegralCurve_maximalIntegralCurve_of_eq_univ hv h
   · have habs := abs_nonneg t
     refine (hγ.isMIntegralCurveOn (Ioo (-(|t| + 1)) (|t| + 1))).subset_maximalIntegralCurveInterval
       ⟨by linarith, by linarith⟩ hx ⟨by linarith [neg_abs_le t], by linarith [le_abs_self t]⟩
