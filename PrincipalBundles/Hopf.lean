@@ -672,11 +672,20 @@ lemma contMDiffOn_triv₀Inv :
     ContMDiffOn ((𝓡 2).prod (𝓡 1)) (𝓡 3) ∞ triv₀Inv (baseSet₀ ×ˢ univ) := by
   haveI : Fact (Module.finrank ℝ (EuclideanSpace ℝ (Fin 4)) = 3 + 1) := ⟨by simp⟩
   apply contMDiffOn_sphere_of_coe (n := 3) (isOpen_baseSet₀.prod isOpen_univ)
-  have h : ContMDiffOn ((𝓡 2).prod (𝓡 1)) 𝓘(ℝ, EuclideanSpace ℝ (Fin 4)) ∞
-      (fun p : S2 × Circle => inv₀Vec p.1 p.2) (baseSet₀ ×ˢ univ) := by
-    refine (contDiffOn_inv₀Vec.contMDiffOn).comp (contMDiff_coe_pair.contMDiffOn) ?_
+  have hv : ContMDiffOn 𝓘(ℝ, EuclideanSpace ℝ (Fin 3) × ℂ) 𝓘(ℝ, EuclideanSpace ℝ (Fin 4)) ∞
+      (fun q : EuclideanSpace ℝ (Fin 3) × ℂ => inv₀Vec q.1 q.2) {p | -1 < p.1 2} :=
+    contDiffOn_inv₀Vec.contMDiffOn
+  have hc : ContMDiffOn ((𝓡 2).prod (𝓡 1)) 𝓘(ℝ, EuclideanSpace ℝ (Fin 3) × ℂ) ∞
+      (fun p : S2 × Circle => ((p.1 : EuclideanSpace ℝ (Fin 3)), (p.2 : ℂ)))
+      (baseSet₀ ×ˢ univ) :=
+    contMDiff_coe_pair.contMDiffOn
+  have hmaps : Set.MapsTo (fun p : S2 × Circle => ((p.1 : EuclideanSpace ℝ (Fin 3)), (p.2 : ℂ)))
+      (baseSet₀ ×ˢ univ) {p | -1 < p.1 2} := by
     intro p hp
     exact lt_of_le_of_ne (S2_two_le p.1).1 (Ne.symm hp.1)
+  have h : ContMDiffOn ((𝓡 2).prod (𝓡 1)) 𝓘(ℝ, EuclideanSpace ℝ (Fin 4)) ∞
+      (fun p : S2 × Circle => inv₀Vec p.1 p.2) (baseSet₀ ×ˢ univ) :=
+    hv.comp hc hmaps
   refine h.congr ?_
   intro p hp
   exact coe_triv₀Inv hp.1
@@ -686,11 +695,20 @@ lemma contMDiffOn_triv₁Inv :
     ContMDiffOn ((𝓡 2).prod (𝓡 1)) (𝓡 3) ∞ triv₁Inv (baseSet₁ ×ˢ univ) := by
   haveI : Fact (Module.finrank ℝ (EuclideanSpace ℝ (Fin 4)) = 3 + 1) := ⟨by simp⟩
   apply contMDiffOn_sphere_of_coe (n := 3) (isOpen_baseSet₁.prod isOpen_univ)
-  have h : ContMDiffOn ((𝓡 2).prod (𝓡 1)) 𝓘(ℝ, EuclideanSpace ℝ (Fin 4)) ∞
-      (fun p : S2 × Circle => inv₁Vec p.1 p.2) (baseSet₁ ×ˢ univ) := by
-    refine (contDiffOn_inv₁Vec.contMDiffOn).comp (contMDiff_coe_pair.contMDiffOn) ?_
+  have hv : ContMDiffOn 𝓘(ℝ, EuclideanSpace ℝ (Fin 3) × ℂ) 𝓘(ℝ, EuclideanSpace ℝ (Fin 4)) ∞
+      (fun q : EuclideanSpace ℝ (Fin 3) × ℂ => inv₁Vec q.1 q.2) {p | p.1 2 < 1} :=
+    contDiffOn_inv₁Vec.contMDiffOn
+  have hc : ContMDiffOn ((𝓡 2).prod (𝓡 1)) 𝓘(ℝ, EuclideanSpace ℝ (Fin 3) × ℂ) ∞
+      (fun p : S2 × Circle => ((p.1 : EuclideanSpace ℝ (Fin 3)), (p.2 : ℂ)))
+      (baseSet₁ ×ˢ univ) :=
+    contMDiff_coe_pair.contMDiffOn
+  have hmaps : Set.MapsTo (fun p : S2 × Circle => ((p.1 : EuclideanSpace ℝ (Fin 3)), (p.2 : ℂ)))
+      (baseSet₁ ×ˢ univ) {p | p.1 2 < 1} := by
     intro p hp
     exact lt_of_le_of_ne (S2_two_le p.1).2 hp.1
+  have h : ContMDiffOn ((𝓡 2).prod (𝓡 1)) 𝓘(ℝ, EuclideanSpace ℝ (Fin 4)) ∞
+      (fun p : S2 × Circle => inv₁Vec p.1 p.2) (baseSet₁ ×ˢ univ) :=
+    hv.comp hc hmaps
   refine h.congr ?_
   intro p hp
   exact coe_triv₁Inv hp.1
