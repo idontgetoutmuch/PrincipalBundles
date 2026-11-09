@@ -100,8 +100,8 @@ abbrev Fibre (x : M) : Type _ :=
 instance (x : M) : MulAction (MulOpposite (E →L[ℝ] E)ˣ) (Fibre I M x) where
   smul g f := ⟨f.1.comp (MulOpposite.unop g).val,
     (show IsUnit f.1 from f.2).mul (MulOpposite.unop g).isUnit⟩
-  one_smul f := Subtype.ext (ContinuousLinearMap.comp_id _)
-  mul_smul g h f := Subtype.ext (ContinuousLinearMap.comp_assoc _ _ _).symm
+  one_smul _ := Subtype.ext (ContinuousLinearMap.comp_id _)
+  mul_smul _ _ _ := Subtype.ext (ContinuousLinearMap.comp_assoc _ _ _).symm
 
 variable (I M) in
 /-- The sigma-type total space and the open subset have the same points. -/
