@@ -581,6 +581,8 @@ noncomputable instance FrameBundle.isPrincipalBundle [IsManifold I ∞ M] :
       · exact contMDiff_subtype_val
     -- `frameBundleTriv p r` is `(r.proj, (frameBundleTriv p r).2)` by definition
     exact hfst.contMDiffAt.prodMk hsnd
+  -- TODO: the Hom-bundle trivialization's inverse, restricted to the frames.
+  smooth_localTriv_symm := fun _ => sorry
 
 end FrameBundleRL
 

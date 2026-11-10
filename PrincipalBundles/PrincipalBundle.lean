@@ -96,10 +96,16 @@ class IsPrincipalBundle
   torsor action on the fibres with right translation of `G` on itself. -/
   equivariant_localTriv : ∀ (p q : P), q ∈ (localTriv p).source → ∀ (g : G),
     (localTriv p) (q <• g) = ⟨proj q, ((localTriv p) q).2 * g⟩
-  /-- Each local trivialization is smooth on its source. Together with `smooth_proj` and
-  equivariance this makes `localTriv p` the smooth equivariant chart of Tu §27. -/
+  /-- Each local trivialization is smooth on its source. -/
   smooth_localTriv : ∀ p : P,
     ContMDiffOn IP (IB.prod IG) ∞ (localTriv p) (localTriv p).source
+  /-- The inverse of each local trivialization is smooth on its target. Together with
+  `smooth_localTriv` this makes `localTriv p` a diffeomorphism from `proj ⁻¹' baseSet` onto
+  `baseSet × G`, as in Kobayashi–Nomizu (Ch. I §5) and Tu (§27.1). Without it, a smooth
+  equivariant homeomorphism whose inverse is not smooth would qualify. -/
+  smooth_localTriv_symm : ∀ p : P,
+    ContMDiffOn (IB.prod IG) IP ∞ (localTriv p).toOpenPartialHomeomorph.symm
+      (localTriv p).target
 
 variable [hPB : IsPrincipalBundle IB G IG P IP proj]
 

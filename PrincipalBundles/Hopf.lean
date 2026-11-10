@@ -889,6 +889,8 @@ instance instIsPrincipalBundle :
     split_ifs
     · exact contMDiffOn_triv₀Fun
     · exact contMDiffOn_triv₁Fun
+  -- TODO: from `contMDiffOn_triv₀Inv` and `contMDiffOn_triv₁Inv`, once they build on 4.36.
+  smooth_localTriv_symm := fun _ => sorry
 
 /-- The action is smooth, as needed for fundamental vector fields and connection forms. -/
 instance instSmoothRightGAction : SmoothRightGAction ∞ (𝓡 1) (𝓡 3) Circle S3 :=
