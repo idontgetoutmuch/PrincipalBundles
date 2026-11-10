@@ -603,7 +603,7 @@ noncomputable instance FrameBundle.isPrincipalBundle [IsManifold I ∞ M] :
     apply (ContMDiffWithinAt.subtypeVal_comp_iff (FrameBundle I M) _ _ _).mp
     have hpair : ContMDiffWithinAt (I.prod 𝓘(ℝ, E →L[ℝ] E)) (I.prod 𝓘(ℝ, E →L[ℝ] E)) ∞
         (fun y : M × (E →L[ℝ] E)ˣ => (y.1, (y.2 : E →L[ℝ] E))) (frameBundleTriv p).target x :=
-      contMDiffWithinAt_fst.prodMk (Units.contMDiff_val.comp contMDiff_snd).contMDiffWithinAt
+      contMDiffWithinAt_fst.prodMk ((Units.contMDiff_val.comp contMDiff_snd) x).contMDiffWithinAt
     have hsymm : ContMDiffWithinAt (I.prod 𝓘(ℝ, E →L[ℝ] E)) (I.prod 𝓘(ℝ, E →L[ℝ] E)) ∞
         e'.toOpenPartialHomeomorph.symm e'.target (x.1, (x.2 : E →L[ℝ] E)) :=
       e'.contMDiffOn_symm _ (e'.mem_target.mpr hb)
