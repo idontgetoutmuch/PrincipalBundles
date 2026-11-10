@@ -439,6 +439,18 @@ lemma Bundle.Trivialization.coe_snd_restrictUnits (e : Trivialization R proj) (P
     ((e.restrictUnits P hP p₀ z).2 : R) = (e z).2 :=
   val_unitCoord ((hP z.1 hz).mp z.2)
 
+open Classical in
+/-- Over the base set, the inverse of the restriction is the inverse of `e`, applied to the
+underlying element of the unit. -/
+lemma Bundle.Trivialization.coe_restrictUnits_symm (e : Trivialization R proj) (P : Set Z)
+    (hP : ∀ z ∈ e.source, z ∈ P ↔ IsUnit (e z).2) (p₀ : P) {x : B × Rˣ}
+    (hx : x.1 ∈ e.baseSet) :
+    ((e.restrictUnits P hP p₀).toOpenPartialHomeomorph.symm x : Z) =
+      e.toOpenPartialHomeomorph.symm (x.1, (x.2 : R)) := by
+  change ((dite (x.1 ∈ e.baseSet)
+    (fun h => (⟨e.toOpenPartialHomeomorph.symm (x.1, (x.2 : R)), _⟩ : P)) (fun _ => p₀) : P) : Z) = _
+  rw [dif_pos hx]
+
 end UnitsRestrict
 
 section FrameBundleRL  -- restricted to ℝ for IsPrincipalBundle
@@ -581,8 +593,25 @@ noncomputable instance FrameBundle.isPrincipalBundle [IsManifold I ∞ M] :
       · exact contMDiff_subtype_val
     -- `frameBundleTriv p r` is `(r.proj, (frameBundleTriv p r).2)` by definition
     exact hfst.contMDiffAt.prodMk hsnd
-  -- TODO: the Hom-bundle trivialization's inverse, restricted to the frames.
-  smooth_localTriv_symm := fun _ => sorry
+  smooth_localTriv_symm := fun p => by
+    set e' := trivializationAt (E →L[ℝ] E)
+      (fun x : M => Bundle.Trivial M E x →L[ℝ] TangentSpace I x) p.1.proj
+    intro x hx
+    have hb : x.1 ∈ e'.baseSet := hx.1
+    -- after including the frames into the Hom bundle, the inverse is `e'.symm` applied to
+    -- `(b, (g : E →L[ℝ] E))`
+    apply (ContMDiffWithinAt.subtypeVal_comp_iff (FrameBundle I M) _ _ _).mp
+    have hpair : ContMDiffWithinAt (I.prod 𝓘(ℝ, E →L[ℝ] E)) (I.prod 𝓘(ℝ, E →L[ℝ] E)) ∞
+        (fun y : M × (E →L[ℝ] E)ˣ => (y.1, (y.2 : E →L[ℝ] E))) (frameBundleTriv p).target x :=
+      contMDiffWithinAt_fst.prodMk (Units.contMDiff_val.comp contMDiff_snd).contMDiffWithinAt
+    have hsymm : ContMDiffWithinAt (I.prod 𝓘(ℝ, E →L[ℝ] E)) (I.prod 𝓘(ℝ, E →L[ℝ] E)) ∞
+        e'.toOpenPartialHomeomorph.symm e'.target (x.1, (x.2 : E →L[ℝ] E)) :=
+      e'.contMDiffOn_symm _ (e'.mem_target.mpr hb)
+    have hmaps : Set.MapsTo (fun y : M × (E →L[ℝ] E)ˣ => (y.1, (y.2 : E →L[ℝ] E)))
+        (frameBundleTriv p).target e'.target := fun y hy => e'.mem_target.mpr hy.1
+    refine (hsymm.comp x hpair hmaps).congr (fun y hy => ?_) ?_
+    · exact Trivialization.coe_restrictUnits_symm _ _ _ _ hy.1
+    · exact Trivialization.coe_restrictUnits_symm _ _ _ _ hb
 
 end FrameBundleRL
 
