@@ -683,14 +683,13 @@ lemma contMDiffOn_triv₀Inv :
       (baseSet₀ ×ˢ univ) {p | -1 < p.1 2} := by
     intro p hp
     exact lt_of_le_of_ne (S2_two_le p.1).1 (Ne.symm hp.1)
+  have h1 := hv.comp hc hmaps
   have h : ContMDiffOn ((𝓡 2).prod (𝓡 1)) 𝓘(ℝ, EuclideanSpace ℝ (Fin 4)) ∞
-      (fun p : S2 × Circle => inv₀Vec p.1 p.2) (baseSet₀ ×ˢ univ) :=
-    hv.comp hc hmaps
+      (fun p : S2 × Circle => inv₀Vec p.1 p.2) (baseSet₀ ×ˢ univ) := h1
   refine h.congr ?_
   intro p hp
   exact coe_triv₀Inv hp.1
 
-set_option maxHeartbeats 400000 in
 lemma contMDiffOn_triv₁Inv :
     ContMDiffOn ((𝓡 2).prod (𝓡 1)) (𝓡 3) ∞ triv₁Inv (baseSet₁ ×ˢ univ) := by
   haveI : Fact (Module.finrank ℝ (EuclideanSpace ℝ (Fin 4)) = 3 + 1) := ⟨by simp⟩
@@ -706,9 +705,9 @@ lemma contMDiffOn_triv₁Inv :
       (baseSet₁ ×ˢ univ) {p | p.1 2 < 1} := by
     intro p hp
     exact lt_of_le_of_ne (S2_two_le p.1).2 hp.1
+  have h1 := hv.comp hc hmaps
   have h : ContMDiffOn ((𝓡 2).prod (𝓡 1)) 𝓘(ℝ, EuclideanSpace ℝ (Fin 4)) ∞
-      (fun p : S2 × Circle => inv₁Vec p.1 p.2) (baseSet₁ ×ˢ univ) :=
-    hv.comp hc hmaps
+      (fun p : S2 × Circle => inv₁Vec p.1 p.2) (baseSet₁ ×ˢ univ) := h1
   refine h.congr ?_
   intro p hp
   exact coe_triv₁Inv hp.1
@@ -889,8 +888,12 @@ instance instIsPrincipalBundle :
     split_ifs
     · exact contMDiffOn_triv₀Fun
     · exact contMDiffOn_triv₁Fun
-  -- TODO: from `contMDiffOn_triv₀Inv` and `contMDiffOn_triv₁Inv`, once they build on 4.36.
-  smooth_localTriv_symm := fun _ => sorry
+  smooth_localTriv_symm := by
+    intro p
+    unfold localTriv
+    split_ifs
+    · exact contMDiffOn_triv₀Inv
+    · exact contMDiffOn_triv₁Inv
 
 /-- The action is smooth, as needed for fundamental vector fields and connection forms. -/
 instance instSmoothRightGAction : SmoothRightGAction ∞ (𝓡 1) (𝓡 3) Circle S3 :=
